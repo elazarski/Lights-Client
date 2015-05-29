@@ -18,13 +18,13 @@ snd_seq_t *handle;
 int inPort, outPort, phoneOut;
 
 // thread stuff
-vector<pthread_t *> inputThreads;
-vector<pthread_t *> outputThreads;
+vector<pthread_t> inputThreads;
+vector<pthread_t> outputThreads;
 
 // forward declarations
 void closeALSA();
-void *inThreadFunc(void *vect);
-void *outThreadFunc(void *vect);
+void *inThreadFunc(void *threadStruct);
+void *outThreadFunc(void *threadStruct);
 char openALSA();
 void playSong(vector<Event> fullArray, int numTracks);
 
@@ -92,9 +92,12 @@ void playSong(vector<Event> fullArray, int numTracks) {
     	mp.at(i).type = META;
     }
 
-    // create threads with appropriate vectors
+    // create structs for threads
+    vector<ThreadStruct> inputThreadStructs;
+    vector<ThreadStruct> outputThreadStructs;
+
+    // populate structs
     for (int i = 0; i < 32; i++) {
-    	// check if current channel is used
     	bool used = false;
     	for (unsigned int j = 0; j < sortedVector.at(i).size(); j++) {
     		if (sortedVector.at(i).at(j).type != META) {
@@ -104,47 +107,59 @@ void playSong(vector<Event> fullArray, int numTracks) {
     	}
 
     	if (used) {
+    		ThreadStruct current;
+    		current.notes = sortedVector.at(i);
+    		current.mp = mp;
+    		current.tempo = tempo;
 
-    		// create vector for this channel
-    		vector<vector<Event> > currentChannel;
-    		currentChannel.push_back(sortedVector.at(i));
-    		currentChannel.push_back(mp);
-    		currentChannel.push_back(vector<Event> (1, tempo));
-
-
-    		// append new pthread_t to appropriate vector and start it
-    		pthread_t *currentThread;
-    		int threadCreateError = 0;
-
-    		if (currentChannel.at(0).at(0).channel < 16) { // input thread
-    			inputThreads.push_back(currentThread);
-    			threadCreateError = pthread_create(currentThread, NULL, inThreadFunc, (void *)&currentChannel);
-    		} else {
-    			outputThreads.push_back(currentThread);
-    			threadCreateError = pthread_create(currentThread, NULL, outThreadFunc, (void *)&currentChannel);
-    		}
-
-
-    		if (threadCreateError != 0) {
-    			fprintf(stderr, "THREAD CREATE ERROR!");
-    			return;
+    		// check for input vs output and append to appropriate vector
+    		if (current.notes.at(0).channel < 16) { // input thread
+    			inputThreadStructs.push_back(current);
+    		} else { // output
+    			outputThreadStructs.push_back(current);
     		}
     	}
     }
+
+    // create input threads
+    for (unsigned int i = 0; i < inputThreadStructs.size(); i++) {
+    	pthread_t current;
+    	inputThreads.push_back(current);
+
+    	int threadCreateRet = pthread_create(&inputThreads.at(i), NULL, inThreadFunc, &inputThreadStructs.at(i));
+
+    	if (threadCreateRet != 0) fprintf(stderr, "Error creating input thread %d\n", i);
+    }
+
+    // create output threads
+    for (unsigned int i = 0; i < outputThreadStructs.size(); i++) {
+    	pthread_t current;
+    	outputThreads.push_back(current);
+
+    	int threadCreateRet = pthread_create(&outputThreads.at(i), NULL, outThreadFunc, &outputThreadStructs.at(i));
+
+    	if (threadCreateRet != 0) fprintf(stderr, "Error creating output thread %d\n", i);
+    }
+
+
 }
 
 // function for thread to execute for MIDI keyboard in
-void *inThreadFunc(void *vect) {
-	printf("Input Thread\n");
+void *inThreadFunc(void *threadStruct) {
+	ThreadStruct *data = (ThreadStruct *)threadStruct;
 
-	return 0;
+	printf("Input channel %d ready\n", (int)data->notes.at(0).channel);
+
+	return NULL;
 }
 
 // function for thread to execute for MIDI out
-void *outThreadFunc(void *vect) {
-	printf("Output Thread\n");
+void *outThreadFunc(void *threadStruct) {
+	ThreadStruct *data = (ThreadStruct *)threadStruct;
 
-	return 0;
+	printf("Output channel %d ready\n", (int)data->notes.at(0).channel);
+
+	return NULL;
 }
 
 // close ALSA Sequencer

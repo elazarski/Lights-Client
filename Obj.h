@@ -8,7 +8,7 @@ enum Type {NOTE, REST, META};
 #ifndef EVENT_H
 #define EVENT_H
 
-typedef struct Event{
+typedef struct Event {
 	char type;
 	char num;
 	float time;
@@ -17,7 +17,15 @@ typedef struct Event{
 
 #endif
 
-// helps with blocking threads
-static enum { IN, OUT } status = OUT;
+#ifndef THREADSTRUCT_H
+#define THREADSTRUCT_H
+
+typedef struct ThreadStruct {
+	vector<Event> notes;
+	vector<Event> mp;
+	Event tempo;
+} THREADSTRUCT;
+
+#endif
 
 #endif // OBJ_H_INCLUDED

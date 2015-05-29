@@ -7,8 +7,8 @@
 #include <libxml/parser.h>
 #include <string.h>
 #include <sstream>
-#include "Obj.h"
 #include <algorithm>
+#include "Obj.h"
 
 using namespace std;
 
@@ -38,7 +38,7 @@ vector<Event> readFiles(string songPath, int *numTracks) {
 	 * 		how many outputs
 	 * 		how many tracks to read for key1
 	 * 		first key1 track second key1 track...
-	 * 		key 2...
+	 * 		key 2...etc
 	 * 		how many tracks for measures & parts
 	 * 		mp1 mp2...
 	 * 		how many tracks to read for output
@@ -79,7 +79,7 @@ vector<Event> readFiles(string songPath, int *numTracks) {
 		inputTracks.push_back(currentInput);
 	}
 
-	// parts and measures
+	// measures and parts
 	file >> num;
 	vector<int> mp(num);
 	for (int i = 0; i < num; i++) {
@@ -161,8 +161,7 @@ vector<Event> readFiles(string songPath, int *numTracks) {
 					fullArray.push_back(part.at(0));
 				} else if (track >= 0) {
 
-					// check for what we need from XML as far as parts go
-					if (track == 0) track = 32;
+
 					vector<Event> part = parsePart(cur, track);
 
 					for (unsigned int i = 0; i < part.size(); i++) {
@@ -208,7 +207,7 @@ int checkTracks(vector<vector<int> > inputTracks, vector<int> mp, vector<vector<
 				<< mp.at(i)))->str();
 
 		if (strcmp((char *)id, partName.c_str()) == 0) {
-			return 0;
+			return 32;
 		}
 	}
 
@@ -218,7 +217,7 @@ int checkTracks(vector<vector<int> > inputTracks, vector<int> mp, vector<vector<
 		for (unsigned int j = 0; j < outputTracks.at(i).size(); j++) {
 			string partName = "P" +
 					static_cast<ostringstream*>( &(ostringstream()
-					<< inputTracks.at(i).at(j)))->str();
+					<< outputTracks.at(i).at(j)))->str();
 
 			if (strcmp((char *)id, partName.c_str()) == 0) {
 				return i + 16;
