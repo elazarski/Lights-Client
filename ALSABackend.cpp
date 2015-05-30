@@ -17,10 +17,6 @@ using namespace std;
 snd_seq_t *handle;
 int inPort, outPort, phoneOut;
 
-// thread stuff
-vector<pthread_t> inputThreads;
-vector<pthread_t> outputThreads;
-
 // forward declarations
 void closeALSA();
 void *inThreadFunc(void *threadStruct);
@@ -91,6 +87,10 @@ void playSong(vector<Event> fullArray, int numTracks) {
     for (unsigned int i = 0; i < mp.size(); i++) {
     	mp.at(i).type = META;
     }
+
+    // thread stuff
+    vector<pthread_t> inputThreads;
+    vector<pthread_t> outputThreads;
 
     // create structs for threads
     vector<ThreadStruct> inputThreadStructs;
