@@ -14,8 +14,15 @@
 using namespace std;
 
 // global variables
+
+// ALSA
 snd_seq_t *handle;
 int inPort, outPort, phoneOut;
+
+// Threads
+// mutex for data copy
+pthread_mutex_t dataLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t dataCond = PTHREAD_COND_INITIALIZER;
 
 // forward declarations
 void closeALSA();
@@ -123,14 +130,23 @@ void playSong(vector<Event> fullArray, int numTracks) {
 
     // create input threads
     for (unsigned int i = 0; i < inputThreadStructs.size(); i++) {
+
+    	// lock dataLock
+    	pthread_mutex_lock(&dataLock);
+
     	pthread_t current;
     	inputThreads.push_back(current);
 
     	int threadCreateRet = pthread_create(&inputThreads.at(i), NULL, inThreadFunc, &inputThreadStructs.at(i));
 
-    	if (threadCreateRet != 0) fprintf(stderr, "Error creating input thread %d\n", i);
-    }
+    	// unlock dataLock
+    	pthread_mutex_unlock(&dataLock);
 
+    	if (threadCreateRet != 0) fprintf(stderr, "Error creating input thread %d\n", i);
+
+
+    }
+/*
     // create output threads
     for (unsigned int i = 0; i < outputThreadStructs.size(); i++) {
     	pthread_t current;
@@ -140,15 +156,27 @@ void playSong(vector<Event> fullArray, int numTracks) {
 
     	if (threadCreateRet != 0) fprintf(stderr, "Error creating output thread %d\n", i);
     }
-
+*/
 
 }
 
 // function for thread to execute for MIDI keyboard in
 void *inThreadFunc(void *threadStruct) {
-	ThreadStruct *data = (ThreadStruct *)threadStruct;
 
-	printf("Input channel %d ready\n", (int)data->notes.at(0).channel);
+	// lock dataLock
+	pthread_mutex_lock(&dataLock);
+
+	ThreadStruct *dataPTR = (ThreadStruct *)threadStruct;
+	ThreadStruct data;
+
+	// copy data
+	data.mp = dataPTR->mp;
+	data.notes = dataPTR->notes;
+	data.tempo = dataPTR->tempo;
+
+	// unlock dataLock
+	pthread_mutex_unlock(&dataLock);
+	printf("Input channel %d ready\n", (int)data.notes.at(0).channel);
 
 	return NULL;
 }
