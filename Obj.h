@@ -21,7 +21,7 @@ typedef struct Event {
 #define THREADSTRUCT_H
 
 typedef struct ThreadStruct {
-	vector<Event> notes;
+	vector<vector<Event> > notes;
 	vector<Event> mp;
 	Event tempo;
 } THREADSTRUCT;

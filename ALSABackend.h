@@ -12,6 +12,6 @@ using namespace std;
 
 void closeALSA();
 char openALSA();
-void playSong(vector<Event> fullArray, int numTracks);
+void playSong(vector<Event> fullArray, int numInputTracks, int numOutputTracks);
 
 #endif // ALSABACKEND_H_INCLUDED

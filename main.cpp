@@ -50,8 +50,8 @@ int main(int argc, char *argv[]) {
 
 		if (play == 1) { // 1 means that user entered correct song and wants to play a song
 
-			int numTracks;
-			vector<Event> fullArray = readFiles(songPath, &numTracks);
+			int numInputTracks, numOutputTracks;
+			vector<Event> fullArray = readFiles(songPath, &numInputTracks, &numOutputTracks);
 
 			// check for errors
 			if (fullArray.at(0).num == -1) {
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 				printf("Unable to open XML file\n");
 			} else {
 				printf("Song loaded\n");
-				playSong(fullArray, numTracks);
+				playSong(fullArray, numInputTracks, numOutputTracks);
 			}
 		}
 	} while (play != 0); // getInput returns 0 if user entered blank line (to quit)

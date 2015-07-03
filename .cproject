@@ -44,10 +44,11 @@
 									<listOptionValue builtIn="false" value="../"/>
 								</option>
 								<option id="gnu.cpp.link.option.libs.1231062644" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="asound"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="xml2"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value=""/>
 									<listOptionValue builtIn="false" value="asound"/>
 									<listOptionValue builtIn="false" value="pthread"/>
-									<listOptionValue builtIn="false" value="xml2"/>
-									<listOptionValue builtIn="false" value="asound"/>
 									<listOptionValue builtIn="false" value="xml2"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.728167667" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">

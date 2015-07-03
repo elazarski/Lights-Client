@@ -8,8 +8,10 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <algorithm>
-#include "Obj.h"
 #include <pthread.h>
+#include <cmath>
+#include <queue>
+#include "Obj.h"
 
 using namespace std;
 
@@ -19,17 +21,24 @@ using namespace std;
 snd_seq_t *handle;
 int inPort, outPort, phoneOut;
 
-// Threads
-// mutex for data copy
-pthread_mutex_t dataLock = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t dataCond = PTHREAD_COND_INITIALIZER;
+// Thread stuff
+pthread_mutex_t inputDataLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t outputDataLock = PTHREAD_MUTEX_INITIALIZER;
+
+ThreadStruct inputData;
+ThreadStruct outputData;
+
+vector<bool> inputReady;
+vector<bool> outputReady;
+
+vector<queue<Event> > inputEvents;
 
 // forward declarations
 void closeALSA();
-void *inThreadFunc(void *threadStruct);
-void *outThreadFunc(void *threadStruct);
+void *inThreadFunc(void *channel);
+void *outThreadFunc(void *channel);
 char openALSA();
-void playSong(vector<Event> fullArray, int numTracks);
+void playSong(vector<Event> fullArray, int numInputTracks, int numOutputTracks);
 
 // called by main
 // open ALSA Sequencer as well as Input & Output ports
@@ -75,117 +84,148 @@ char openALSA() {
 // called by main
 // function to play song
 // takes vector of all loaded information
-void playSong(vector<Event> fullArray, int numTracks) {
-	Event tempo;
-	vector<Event> mp;
+void playSong(vector<Event> fullArray, int numInputTracks, int numOutputTracks) {
 
-    // sort fullArray into vectors based on channel
-    vector<vector<Event> > sortedVector(32, vector<Event>(0));
+	inputData.notes = vector<vector<Event> >(numInputTracks, vector<Event>(0));
+	outputData.notes = vector<vector<Event> >(numOutputTracks, vector<Event>(0));
+
+	inputEvents = vector<queue<Event> >(numInputTracks);
+
+    // sort fullArray
     for (unsigned int i = 0; i < fullArray.size(); i++) {
-    	if (fullArray.at(i).type == META) {
-    		tempo = fullArray.at(i);
-    	} else if (fullArray.at(i).channel == 32) { // assume MP for now
-    		mp.push_back(fullArray.at(i));
-    	} else {
-    		sortedVector.at(fullArray.at(i).channel).push_back(fullArray.at(i));
-    	}
-    }
-
-    for (unsigned int i = 0; i < mp.size(); i++) {
-    	mp.at(i).type = META;
-    }
-
-    // thread stuff
-    vector<pthread_t> inputThreads;
-    vector<pthread_t> outputThreads;
-
-    // create structs for threads
-    vector<ThreadStruct> inputThreadStructs;
-    vector<ThreadStruct> outputThreadStructs;
-
-    // populate structs
-    for (int i = 0; i < 32; i++) {
-    	bool used = false;
-    	for (unsigned int j = 0; j < sortedVector.at(i).size(); j++) {
-    		if (sortedVector.at(i).at(j).type != META) {
-    			used = true;
-    			break;
-    		}
-    	}
-
-    	if (used) {
-    		ThreadStruct current;
-    		current.notes = sortedVector.at(i);
-    		current.mp = mp;
-    		current.tempo = tempo;
-
-    		// check for input vs output and append to appropriate vector
-    		if (current.notes.at(0).channel < 16) { // input thread
-    			inputThreadStructs.push_back(current);
+    	if (fullArray.at(i).type == META) { // tempo Event
+    		inputData.tempo = fullArray.at(i);
+    		outputData.tempo = fullArray.at(i);
+    	} else if (fullArray.at(i).channel == 32) { // measures & parts track
+    		fullArray.at(i).type = META;
+    		inputData.mp.push_back(fullArray.at(i));
+    		outputData.mp.push_back(fullArray.at(i));
+    	} else { // either input or output
+    		if (fullArray.at(i).channel < 16) { // input
+    			inputData.notes.at(fullArray.at(i).channel).push_back(fullArray.at(i));
     		} else { // output
-    			outputThreadStructs.push_back(current);
+    			fullArray.at(i).channel = abs(fullArray.at(i).channel - 16);
+    			outputData.notes.at(fullArray.at(i).channel).push_back(fullArray.at(i));
     		}
     	}
     }
+
+    vector<pthread_t> inputThreads(numInputTracks);
+    vector<pthread_t> outputThreads(numOutputTracks);
 
     // create input threads
-    for (unsigned int i = 0; i < inputThreadStructs.size(); i++) {
-
-    	// lock dataLock
-    	pthread_mutex_lock(&dataLock);
-
+    for (int i = 0; i < numInputTracks; i++) {
+    	int *track = new int;
+    	*track = i;
     	pthread_t current;
-    	inputThreads.push_back(current);
+    	inputThreads.at(i) = current;
 
-    	int threadCreateRet = pthread_create(&inputThreads.at(i), NULL, inThreadFunc, &inputThreadStructs.at(i));
+    	inputReady.push_back(false);
 
-    	// unlock dataLock
-    	pthread_mutex_unlock(&dataLock);
-
-    	if (threadCreateRet != 0) fprintf(stderr, "Error creating input thread %d\n", i);
-
+    	int ret = pthread_create(&inputThreads.at(i), NULL, inThreadFunc, (void *)track);
+    	if (ret != 0) fprintf(stderr, "Error creating input thread %d\n", i);
 
     }
-/*
+
     // create output threads
-    for (unsigned int i = 0; i < outputThreadStructs.size(); i++) {
+    for (int i = 0; i < numOutputTracks; i++) {
+    	int *track = new int;
+    	*track = i;
     	pthread_t current;
-    	outputThreads.push_back(current);
+    	outputThreads.at(i) = current;
 
-    	int threadCreateRet = pthread_create(&outputThreads.at(i), NULL, outThreadFunc, &outputThreadStructs.at(i));
+    	outputReady.push_back(false);
 
-    	if (threadCreateRet != 0) fprintf(stderr, "Error creating output thread %d\n", i);
+    	int ret = pthread_create(&outputThreads.at(i), NULL, outThreadFunc, (void *)track);
+    	if (ret != 0) fprintf(stderr, "Error creating output thread %d\n", i);
     }
-*/
+
+    bool ready = false;
+    while (!ready) {
+    	ready = true;
+
+    	// check input threads
+    	pthread_mutex_lock(&inputDataLock);
+    	for (int i = 0; i < numInputTracks; i++) {
+    		if (inputReady.at(i) == false) ready = false;
+    	}
+    	pthread_mutex_unlock(&inputDataLock);
+
+    	// check output threads
+    	pthread_mutex_lock(&outputDataLock);
+    	for (int i = 0; i < numOutputTracks; i++) {
+    		if (outputReady.at(i) == false) ready = false;
+    	}
+    	pthread_mutex_unlock(&outputDataLock);
+    }
+
+    printf("All threads ready!\n");
+
+    // reset ready vectors, use these to wake output threads
+    fill(inputReady.begin(), inputReady.end(), false);
+    fill(outputReady.begin(), outputReady.end(), false);
+
 
 }
 
 // function for thread to execute for MIDI keyboard in
-void *inThreadFunc(void *threadStruct) {
+void *inThreadFunc(void *channel) {
+	int *convertedPTR = (int *)channel;
+	int track = *convertedPTR;
 
-	// lock dataLock
-	pthread_mutex_lock(&dataLock);
 
-	ThreadStruct *dataPTR = (ThreadStruct *)threadStruct;
-	ThreadStruct data;
+	// lock input dataLock
+	pthread_mutex_lock(&inputDataLock);
+	vector<Event> notes;
+	vector<Event> mp;
+	Event tempo;
 
-	// copy data
-	data.mp = dataPTR->mp;
-	data.notes = dataPTR->notes;
-	data.tempo = dataPTR->tempo;
+	for (unsigned int i = 0; i < inputData.notes.at(track).size(); i++) {
+		notes.push_back(inputData.notes.at(track).at(i));
+	}
+
+	for (unsigned int i = 0; i < inputData.mp.size(); i++) {
+		mp.push_back(inputData.mp.at(i));
+	}
+
+	tempo = inputData.tempo;
+
+	inputReady.at(track) = true;
 
 	// unlock dataLock
-	pthread_mutex_unlock(&dataLock);
-	printf("Input channel %d ready\n", (int)data.notes.at(0).channel);
+	pthread_mutex_unlock(&inputDataLock);
+	printf("Input channel %d ready\n", track);
+
 
 	return NULL;
 }
 
 // function for thread to execute for MIDI out
-void *outThreadFunc(void *threadStruct) {
-	ThreadStruct *data = (ThreadStruct *)threadStruct;
+void *outThreadFunc(void *channel) {
+	int *convertedPTR = (int *)channel;
+	int track = *convertedPTR;
 
-	printf("Output channel %d ready\n", (int)data->notes.at(0).channel);
+	// lock output datalock
+	pthread_mutex_lock(&outputDataLock);
+	vector<Event> signals;
+	vector<Event> mp;
+	Event tempo;
+
+	for (unsigned int i = 0; i < outputData.notes.at(track).size(); i++) {
+		signals.push_back(outputData.notes.at(track).at(i));
+	}
+
+	for (unsigned int i = 0; i < outputData.mp.size(); i++) {
+		mp.push_back(outputData.notes.at(track).at(i));
+	}
+
+	tempo = outputData.tempo;
+
+	outputReady.at(track) = true;
+
+	// unlock output datalock
+	pthread_mutex_unlock(&outputDataLock);
+	printf("Output channel %d ready\n", track);
 
 	return NULL;
 }

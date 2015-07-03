@@ -22,7 +22,7 @@ int checkTracks(vector<vector<int> > inputTracks, vector<int> mp, vector<vector<
 
 // called by main
 // reads all files and returns vector<Event> of all events to be handled, sorted by time.
-vector<Event> readFiles(string songPath, int *numTracks) {
+vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTracks) {
 	string path;
 	ifstream file; // read data file for info on MIDI file
 	int num;
@@ -59,12 +59,12 @@ vector<Event> readFiles(string songPath, int *numTracks) {
 	// 1st number is for how many input channels there are
 	file >> num;
 	int numKeyChannels = num;
-	*numTracks = num;
+	*numInputTracks = num;
 
 	// 2nd number is for how many output channels there are
 	file >> num;
 	int numOutChannels = num;
-	*numTracks += num;
+	*numOutputTracks = num;
 
 	// read numKeyChannels tracks
 	vector<vector<int> > inputTracks;
