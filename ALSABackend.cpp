@@ -19,7 +19,8 @@ using namespace std;
 
 // ALSA
 snd_seq_t *handle;
-int inPort, outPort, phoneOut;
+int inPort, controlIn, outPort, phoneOut;
+snd_seq_event_t *input;
 
 // Thread stuff
 pthread_mutex_t inputDataLock = PTHREAD_MUTEX_INITIALIZER;
@@ -31,7 +32,7 @@ ThreadStruct outputData;
 vector<bool> inputReady;
 vector<bool> outputReady;
 
-vector<queue<Event> > inputEvents;
+vector<queue<snd_seq_event_t> > inputEvents;
 
 // forward declarations
 void closeALSA();
@@ -57,6 +58,15 @@ char openALSA() {
 	if ((inPort = snd_seq_create_simple_port(handle, "Lights In",
 			SND_SEQ_PORT_CAP_WRITE|SND_SEQ_PORT_CAP_SUBS_WRITE,
 			SND_SEQ_PORT_TYPE_APPLICATION)) < 0) {
+		closeALSA();
+		return 2;
+	}
+
+
+	// open ALSA input for control keyboard
+	if ((controlIn = snd_seq_create_simple_port(handle, "Lights Control",
+			SND_SEQ_PORT_CAP_WRITE|SND_SEQ_PORT_CAP_SUBS_WRITE,
+			SND_SEQ_PORT_TYPE_APPLICATION)) > 0) {
 		closeALSA();
 		return 2;
 	}
@@ -89,8 +99,6 @@ void playSong(vector<Event> fullArray, int numInputTracks, int numOutputTracks) 
 	inputData.notes = vector<vector<Event> >(numInputTracks, vector<Event>(0));
 	outputData.notes = vector<vector<Event> >(numOutputTracks, vector<Event>(0));
 
-	inputEvents = vector<queue<Event> >(numInputTracks);
-
     // sort fullArray
     for (unsigned int i = 0; i < fullArray.size(); i++) {
     	if (fullArray.at(i).type == META) { // tempo Event
@@ -109,6 +117,9 @@ void playSong(vector<Event> fullArray, int numInputTracks, int numOutputTracks) 
     		}
     	}
     }
+
+    // create input queue
+    inputEvents = vector<queue<snd_seq_event_t> >(numInputTracks);
 
     vector<pthread_t> inputThreads(numInputTracks);
     vector<pthread_t> outputThreads(numOutputTracks);
@@ -161,10 +172,32 @@ void playSong(vector<Event> fullArray, int numInputTracks, int numOutputTracks) 
 
     printf("All threads ready!\n");
 
-    // reset ready vectors, use these to wake output threads
-    fill(inputReady.begin(), inputReady.end(), false);
-    fill(outputReady.begin(), outputReady.end(), false);
+    // begin listening for input
+    int npfd = snd_seq_poll_descriptors_count(handle, POLLIN);
+    struct pollfd *pfd = (struct pollfd*)alloca(npfd * sizeof(struct pollfd));
+    snd_seq_poll_descriptors(handle, pfd, npfd, POLLIN);
 
+    bool songDone = false;
+
+    // run until song is done
+    while (!songDone) {
+    	if (poll(pfd, npfd, 100000) > 0) {
+    		pthread_mutex_lock(&outputDataLock);
+    		do {
+    			snd_seq_event_input(handle, &input);
+    			if (input->source.port == controlIn) {
+
+    			} else {
+    				pthread_mutex_unlock(&outputDataLock);
+    				pthread_mutex_lock(&inputDataLock);
+    				int channel = input->data.note.channel;
+    				snd_seq_event_t currentEvent = *input;
+    				inputEvents.at(channel).push(currentEvent);
+    				pthread_mutex_unlock(&inputDataLock);
+    			}
+    		} while (snd_seq_event_input_pending(handle, 0) > 0);
+    	}
+    }
 
 }
 
