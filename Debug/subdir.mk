@@ -23,10 +23,24 @@ CPP_DEPS += \
 
 
 # Each subdirectory must supply rules for building sources it contributes
+ALSABackend.o: ../ALSABackend.cpp
+	@echo 'Building file: $<'
+	@echo 'Invoking: GCC C++ Compiler'
+	g++ -I/usr/include/alsa -I/usr/include/libxml2 -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"ALSABackend.d" -o "$@" "$<"
+	@echo 'Finished building: $<'
+	@echo ' '
+
 %.o: ../%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -I/usr/include/alsa -I/usr/include/libxml2 -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	g++ -I/usr/include -I/usr/include/libxml2 -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	@echo 'Finished building: $<'
+	@echo ' '
+
+main.o: ../main.cpp
+	@echo 'Building file: $<'
+	@echo 'Invoking: GCC C++ Compiler'
+	g++ -I/usr/include/libxml2 -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"main.d" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

@@ -19,7 +19,7 @@ using namespace std;
 
 // ALSA
 snd_seq_t *handle;
-int inPort, controlIn, outPort, phoneOut;
+int inPort, outPort, phoneOut;
 snd_seq_event_t *input;
 
 // Thread stuff
@@ -58,15 +58,6 @@ char openALSA() {
 	if ((inPort = snd_seq_create_simple_port(handle, "Lights In",
 			SND_SEQ_PORT_CAP_WRITE|SND_SEQ_PORT_CAP_SUBS_WRITE,
 			SND_SEQ_PORT_TYPE_APPLICATION)) < 0) {
-		closeALSA();
-		return 2;
-	}
-
-
-	// open ALSA input for control keyboard
-	if ((controlIn = snd_seq_create_simple_port(handle, "Lights Control",
-			SND_SEQ_PORT_CAP_WRITE|SND_SEQ_PORT_CAP_SUBS_WRITE,
-			SND_SEQ_PORT_TYPE_APPLICATION)) > 0) {
 		closeALSA();
 		return 2;
 	}
@@ -182,19 +173,18 @@ void playSong(vector<Event> fullArray, int numInputTracks, int numOutputTracks) 
     // run until song is done
     while (!songDone) {
     	if (poll(pfd, npfd, 100000) > 0) {
+
     		pthread_mutex_lock(&outputDataLock);
     		do {
     			snd_seq_event_input(handle, &input);
-    			if (input->source.port == controlIn) {
+    			pthread_mutex_unlock(&outputDataLock);
 
-    			} else {
-    				pthread_mutex_unlock(&outputDataLock);
-    				pthread_mutex_lock(&inputDataLock);
-    				int channel = input->data.note.channel;
-    				snd_seq_event_t currentEvent = *input;
-    				inputEvents.at(channel).push(currentEvent);
-    				pthread_mutex_unlock(&inputDataLock);
-    			}
+    			pthread_mutex_lock(&inputDataLock);
+    			int channel = input->data.note.channel;
+    			snd_seq_event_t currentEvent = *input;
+    			inputEvents.at(channel).push(currentEvent);
+
+    			pthread_mutex_unlock(&inputDataLock);
     		} while (snd_seq_event_input_pending(handle, 0) > 0);
     	}
     }
@@ -229,6 +219,18 @@ void *inThreadFunc(void *channel) {
 	pthread_mutex_unlock(&inputDataLock);
 	printf("Input channel %d ready\n", track);
 
+	bool partDone = false;
+
+	while (!partDone) {
+		snd_seq_event_t ev;
+		pthread_mutex_lock(&inputDataLock);
+		if (inputEvents.at(track).size() > 0) {
+			ev = inputEvents.at(track).front();
+			inputEvents.at(track).pop();
+		}
+		pthread_mutex_unlock(&inputDataLock);
+		printf("Note received on channel %d, Note: %d\n", track, ev.data.note.note);
+	}
 
 	return NULL;
 }
