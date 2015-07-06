@@ -179,12 +179,14 @@ void playSong(vector<Event> fullArray, int numInputTracks, int numOutputTracks) 
     			snd_seq_event_input(handle, &input);
     			pthread_mutex_unlock(&outputDataLock);
 
-    			pthread_mutex_lock(&inputDataLock);
-    			int channel = input->data.note.channel;
-    			snd_seq_event_t currentEvent = *input;
-    			inputEvents.at(channel).push(currentEvent);
+    			if (input->type == SND_SEQ_EVENT_NOTEON) {
+    				pthread_mutex_lock(&inputDataLock);
+    				int channel = input->data.note.channel;
+    				snd_seq_event_t currentEvent = *input;
+    				inputEvents.at(channel).push(currentEvent);
 
-    			pthread_mutex_unlock(&inputDataLock);
+    				pthread_mutex_unlock(&inputDataLock);
+    			}
     		} while (snd_seq_event_input_pending(handle, 0) > 0);
     	}
     }
@@ -224,12 +226,17 @@ void *inThreadFunc(void *channel) {
 	while (!partDone) {
 		snd_seq_event_t ev;
 		pthread_mutex_lock(&inputDataLock);
-		if (inputEvents.at(track).size() > 0) {
+		if (!inputEvents.at(track).empty()) {
 			ev = inputEvents.at(track).front();
 			inputEvents.at(track).pop();
 		}
 		pthread_mutex_unlock(&inputDataLock);
-		printf("Note received on channel %d, Note: %d\n", track, ev.data.note.note);
+
+		if (ev.type == SND_SEQ_EVENT_NOTEON) {
+			printf("Note received on channel %d, Note: %d\n", track, ev.data.note.note);
+		}
+
+		ev.type = NULL;
 	}
 
 	return NULL;

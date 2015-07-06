@@ -39,14 +39,12 @@
 									<listOptionValue builtIn="false" value="/usr/include/libxml2"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.files.1946549363" name="Include files (-include)" superClass="gnu.c.compiler.option.include.files"/>
-								<option id="gnu.c.compiler.option.misc.other.1448841360" superClass="gnu.c.compiler.option.misc.other" value="-pthread -c -fmessage-length=0" valueType="string"/>
+								<option id="gnu.c.compiler.option.misc.other.1448841360" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-pthread -c -fmessage-length=0" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.2072567871" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.523505936" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug"/>
 							<tool command="g++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GLDErrorParser" id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.193019994" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
-								<option id="gnu.cpp.link.option.paths.1907904520" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="../"/>
-								</option>
+								<option id="gnu.cpp.link.option.paths.1907904520" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths"/>
 								<option id="gnu.cpp.link.option.libs.1710452645" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="asound"/>
 									<listOptionValue builtIn="false" value="pthread"/>
@@ -97,10 +95,8 @@
 						<entry flags="BUILTIN" kind="includePath" name="/usr/include/libxml2"/>
 					</externalSetting>
 					<externalSetting contentTypes="org.eclipse.cdt.managedbuilder.core.compiledObjectFile">
-						<entry flags="RESOLVED" kind="libraryPath" name=""/>
 						<entry flags="UNDEFINED" kind="libraryFile" name="asound" srcPrefixMapping="" srcRootPath=""/>
 						<entry flags="UNDEFINED" kind="libraryFile" name="xml2" srcPrefixMapping="" srcRootPath=""/>
-						<entry flags="UNDEFINED" kind="libraryFile" name="" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
 			</storageModule>
@@ -155,21 +151,6 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="Lights Client.cdt.managedbuild.target.gnu.exe.948686949" name="Executable" projectType="cdt.managedbuild.target.gnu.exe"/>
 	</storageModule>
-	<storageModule moduleId="scannerConfiguration">
-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.release.10132250;cdt.managedbuild.config.gnu.exe.release.10132250.;cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1565978349;cdt.managedbuild.tool.gnu.cpp.compiler.input.63124609">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.release.10132250;cdt.managedbuild.config.gnu.exe.release.10132250.;cdt.managedbuild.tool.gnu.c.compiler.exe.release.2066328827;cdt.managedbuild.tool.gnu.c.compiler.input.1262742120">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1100438961;cdt.managedbuild.config.gnu.exe.debug.1100438961.;cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.545137253;cdt.managedbuild.tool.gnu.cpp.compiler.input.1871054342">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1100438961;cdt.managedbuild.config.gnu.exe.debug.1100438961.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.928443772;cdt.managedbuild.tool.gnu.c.compiler.input.2072567871">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Release">
@@ -178,5 +159,20 @@
 		<configuration configurationName="Debug">
 			<resource resourceType="PROJECT" workspacePath="/Lights Client"/>
 		</configuration>
+	</storageModule>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.release.10132250;cdt.managedbuild.config.gnu.exe.release.10132250.;cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1565978349;cdt.managedbuild.tool.gnu.cpp.compiler.input.63124609">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1100438961;cdt.managedbuild.config.gnu.exe.debug.1100438961.;cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.545137253;cdt.managedbuild.tool.gnu.cpp.compiler.input.1871054342">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.1100438961;cdt.managedbuild.config.gnu.exe.debug.1100438961.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.928443772;cdt.managedbuild.tool.gnu.c.compiler.input.2072567871">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.release.10132250;cdt.managedbuild.config.gnu.exe.release.10132250.;cdt.managedbuild.tool.gnu.c.compiler.exe.release.2066328827;cdt.managedbuild.tool.gnu.c.compiler.input.1262742120">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
 	</storageModule>
 </cproject>
