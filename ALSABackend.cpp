@@ -25,6 +25,7 @@ snd_seq_event_t *input;
 // Thread stuff
 pthread_mutex_t inputDataLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t outputDataLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t inputFinishedLock = PTHREAD_MUTEX_INITIALIZER;
 
 ThreadStruct inputData;
 ThreadStruct outputData;
@@ -142,7 +143,9 @@ void playSong(vector<Event> fullArray, int numInputTracks, int numOutputTracks) 
     	if (ret != 0) fprintf(stderr, "Error creating output thread %d\n", i);
     }
 
+
     bool ready = false;
+
     while (!ready) {
     	ready = true;
 
@@ -162,6 +165,11 @@ void playSong(vector<Event> fullArray, int numInputTracks, int numOutputTracks) 
     }
 
     printf("All threads ready!\n");
+
+    // prepare to listen
+    pthread_mutex_lock(&inputFinishedLock);
+    fill(inputReady.begin(), inputReady.end(), false);
+    pthread_mutex_unlock(&inputFinishedLock);
 
     // begin listening for input
     int npfd = snd_seq_poll_descriptors_count(handle, POLLIN);
@@ -189,6 +197,16 @@ void playSong(vector<Event> fullArray, int numInputTracks, int numOutputTracks) 
     			}
     		} while (snd_seq_event_input_pending(handle, 0) > 0);
     	}
+
+    	// check if input threads have finished
+    	pthread_mutex_lock(&inputFinishedLock);
+    	songDone = true;
+    	for (int i = 0; i < numInputTracks; i++) {
+    		if (inputReady.at(i) == false) {
+    			songDone = false;
+       		}
+    	}
+    	pthread_mutex_unlock(&inputFinishedLock);
     }
 
 }
@@ -221,10 +239,19 @@ void *inThreadFunc(void *channel) {
 	pthread_mutex_unlock(&inputDataLock);
 	printf("Input channel %d ready\n", track);
 
+	// declare variables relating to part
+
+	// will change when current part is done, used in main loop
 	bool partDone = false;
 
+	// index of next note
+	int nextNote = 0;
+
+	// main loop
 	while (!partDone) {
 		snd_seq_event_t ev;
+
+		// check for data in this thread's queue
 		pthread_mutex_lock(&inputDataLock);
 		if (!inputEvents.at(track).empty()) {
 			ev = inputEvents.at(track).front();
@@ -232,12 +259,30 @@ void *inThreadFunc(void *channel) {
 		}
 		pthread_mutex_unlock(&inputDataLock);
 
+		// check if note on event
 		if (ev.type == SND_SEQ_EVENT_NOTEON) {
-			printf("Note received on channel %d, Note: %d\n", track, ev.data.note.note);
+
+			// check if note is correct
+			if (ev.data.note.note == notes.at(nextNote).num) {
+				printf("Correct note received on channel %d\n", track);
+				nextNote++;
+			}
+		}
+
+		// check if part is done
+		if ((unsigned int)nextNote >= notes.size()) {
+			partDone = true;
+
+			// inform main thread that this part is done
+			pthread_mutex_lock(&inputFinishedLock);
+			inputReady.at(track) = true;
+			pthread_mutex_unlock(&inputFinishedLock);
 		}
 
 		ev.type = NULL;
 	}
+
+	free(convertedPTR);
 
 	return NULL;
 }
