@@ -247,6 +247,12 @@ void *inThreadFunc(void *channel) {
 	// index of next note
 	int nextNote = 0;
 
+	// chord stuffs
+	int *chordEnd, *finishedNotes;
+	vector<Event> currentChord;
+	bool inChord = false;
+
+
 	// main loop
 	while (!partDone) {
 		snd_seq_event_t ev;
@@ -262,10 +268,66 @@ void *inThreadFunc(void *channel) {
 		// check if note on event
 		if (ev.type == SND_SEQ_EVENT_NOTEON) {
 
-			// check if note is correct
-			if (ev.data.note.note == notes.at(nextNote).num) {
-				printf("Correct note received on channel %d\n", track);
-				nextNote++;
+			// populate chordEnd if we are in a chord
+			// first, check if inChord is true
+			if (inChord) {
+				// check if received note is correct
+				for (unsigned int i = 0; i < currentChord.size(); i++) {
+					if (ev.data.note.note == currentChord.at(i).num) {
+						printf("Correct note received in chord on channel %d\n", track);
+						*finishedNotes++;
+						nextNote++;
+
+						if ((unsigned int)*finishedNotes >= currentChord.size()) {
+							inChord = false;
+						}
+
+						// don't waste any more time
+						break;
+					} else {
+						fprintf(stderr, "INCORRECT NOTE IN CHORD ON CHANNEL %d\n", track);
+					}
+				}
+
+			} else if (notes.at(nextNote).time == notes.at(nextNote + 1).time) {
+				// check if we should be in a chord and populate it
+				*finishedNotes = 0;
+				currentChord.push_back(notes.at(nextNote));
+				Event next = notes.at(nextNote + 1);
+				int i = 1;
+				while (notes.at(nextNote).time == next.time) {
+					currentChord.push_back(next);
+					i++;
+					next = notes.at(nextNote + i);
+				}
+
+				// check if note was correct
+				for (unsigned int i = 0; i < currentChord.size(); i++) {
+					if (ev.data.note.note == currentChord.at(i).num) {
+						printf("Correct note received in chord on channel %d\n", track);
+						*finishedNotes++;
+						nextNote++;
+
+						// check if chord is done
+						if ((unsigned int)*finishedNotes >= currentChord.size()) {
+							inChord = false;
+						}
+
+						// done waste any more time
+						break;
+					} else {
+						fprintf(stderr, "INCORRECT NOTE IN CHANNEL %d\n", track);
+					}
+				}
+			} else { // not in a chord
+
+				// check if note is correct
+				if (ev.data.note.note == notes.at(nextNote).num) {
+					printf("Correct note received on channel %d\n", track);
+					nextNote++;
+				} else {
+					fprintf(stderr, "INCORRECT NOTE ON CHANNEL %d\n", track);
+				}
 			}
 		}
 
@@ -283,6 +345,8 @@ void *inThreadFunc(void *channel) {
 	}
 
 	free(convertedPTR);
+	free(chordEnd);
+	free(finishedNotes);
 
 	return NULL;
 }
