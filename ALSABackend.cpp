@@ -280,12 +280,13 @@ void *inThreadFunc(void *channel) {
 
 						if ((unsigned int)*finishedNotes >= currentChord.size()) {
 							inChord = false;
+							printf("\n");
 						}
 
 						// don't waste any more time
 						break;
 					} else {
-						fprintf(stderr, "INCORRECT NOTE IN CHORD ON CHANNEL %d\n", track);
+						fprintf(stderr, "INCORRECT NOTE IN CHORD ON CHANNEL %d\n\n", track);
 					}
 				}
 
@@ -311,22 +312,23 @@ void *inThreadFunc(void *channel) {
 						// check if chord is done
 						if ((unsigned int)*finishedNotes >= currentChord.size()) {
 							inChord = false;
+							printf("\n");
 						}
 
 						// done waste any more time
 						break;
 					} else {
-						fprintf(stderr, "INCORRECT NOTE IN CHANNEL %d\n", track);
+						fprintf(stderr, "INCORRECT NOTE IN CHANNEL %d\n\n", track);
 					}
 				}
 			} else { // not in a chord
 
 				// check if note is correct
 				if (ev.data.note.note == notes.at(nextNote).num) {
-					printf("Correct note received on channel %d\n", track);
+					printf("Correct note received on channel %d\n\n", track);
 					nextNote++;
 				} else {
-					fprintf(stderr, "INCORRECT NOTE ON CHANNEL %d\n", track);
+					fprintf(stderr, "INCORRECT NOTE ON CHANNEL %d\n\n", track);
 				}
 			}
 		}
