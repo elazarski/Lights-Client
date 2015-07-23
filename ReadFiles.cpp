@@ -29,81 +29,107 @@ vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTrac
 
 	// fullArray[0] reserved for status messages
 	vector<Event> fullArray(1);
-	 Event er;
-	 er.type = META;
-
-	// start reading /data file
-	/* structure:
-	 * 		how many inputs
-	 * 		how many outputs
-	 * 		how many tracks to read for key1
-	 * 		first key1 track second key1 track...
-	 * 		key 2...etc
-	 * 		how many tracks for measures & parts
-	 * 		mp1 mp2...
-	 * 		how many tracks to read for output
-	 * 		out1 out2...
-	 */
-
-	path = songPath + "/data.txt";
-	file.open(path.c_str());
-	if (!file.is_open()) { // check if file unsuccessfully opened
-		// file was unable to be opened
-		 er.num = -1;
-
-		 vector<Event> errorVect;
-		 errorVect.push_back(er);
-		 return errorVect;
-	}
-
-	// 1st number is for how many input channels there are
-	file >> num;
-	int numKeyChannels = num;
-	*numInputTracks = num;
-
-	// 2nd number is for how many output channels there are
-	file >> num;
-	int numOutChannels = num;
-	*numOutputTracks = num;
-
-	// read numKeyChannels tracks
+	vector<int> mp;
 	vector<vector<int> > inputTracks;
-	for (int i = 0; i < numKeyChannels; i++) {
-		file >> num;
-		int currentKeyTracks = num; // number of tracks for current input
-		vector<int> currentInput;
-		for (int j = 0; j < currentKeyTracks; j++) {
-			file >> num;
-			currentInput.push_back(num);
-		}
-		inputTracks.push_back(currentInput);
-	}
-
-	// measures and parts
-	file >> num;
-	vector<int> mp(num);
-	for (int i = 0; i < num; i++) {
-		file >> mp.at(i);
-	}
-
-	// read numOutChannels tracks
 	vector<vector<int> > outputTracks;
-	for (int i = 0; i < numOutChannels; i++) {
-		file >> num;
-		int currentOutTracks = num;
-		vector<int> currentOutput;
-		for (int j = 0; j < currentOutTracks; j++) {
-			file >> num;
-			currentOutput.push_back(num);
-		}
-		outputTracks.push_back(currentOutput);
+
+	path = songPath + "/data.xml";
+
+	// start reading data.xml
+	xmlDocPtr data;
+	xmlNodePtr current;
+
+	printf("Parsing data.xml file...\n");
+	data = xmlParseFile(path.c_str());
+	if (data == NULL) {
+		fprintf(stderr, "data.xml not parsed successfully\n");
+		vector<Event> errorVect(1);
+		errorVect.at(1).num = -1;
+		return errorVect;
 	}
 
-	// close file
-	file.close();
+	current = xmlDocGetRootElement(data);
+	if (current == NULL) {
+		fprintf(stderr, "Empty data.xml file\n");
+		xmlFree(data);
+		vector<Event> errorVect(1);
+		errorVect.at(1).num = -1;
+		return errorVect;
+	}
+
+	int currentInput = 0;
+	int currentOutput = 0;
+
+	current = current->children;
+	while (current != NULL) {
+
+		if (strcmp((char *)current->name, "numberInputs") == 0) {
+			*numInputTracks = atoi((char *)current->children->content);
+		} else if (strcmp((char *)current->name, "numberOutputs") == 0) {
+			*numOutputTracks = atoi((char *)current->children->content);
+		} else if (strcmp((char *)current->name, "mpTrack") == 0) {
+			mp.push_back(atoi((char *)current->children->content));
+		} else if (strcmp((char *)current->name, "inputTrack") == 0) {
+
+			int numTracks = 1;
+			int currentTrack = 0;
+			xmlNodePtr inputTrack = current->children;
+
+
+			while (inputTrack != NULL) {
+				if (strcmp((char *)inputTrack->name, "numTracks") == 0) {
+					numTracks = atoi((char *)inputTrack->children->content);
+					inputTracks.push_back(vector<int>(numTracks));
+				} else if (strcmp((char *)inputTrack->name, "track") == 0) {
+					inputTracks.at(currentInput).at(currentTrack) = (atoi((char *)inputTrack->children->content));
+					currentTrack++;
+				}
+				inputTrack = inputTrack->next;
+			}
+
+			xmlFree(inputTrack);
+			currentInput++;
+		} else if (strcmp((char *)current->name, "outputTrack") == 0) {
+
+			int numTracks = 1;
+			int currentTrack = 0;
+			xmlNodePtr outputTrack = current->children;
+
+			while (outputTrack != NULL) {
+				if (strcmp((char *)outputTrack->name, "numTracks") == 0) {
+					numTracks = atoi((char *)outputTrack->children->content);
+					outputTracks.push_back(vector<int>(numTracks));
+				} else if (strcmp((char *)outputTrack->name, "track") == 0) {
+					outputTracks.at(currentOutput).at(currentTrack) = (atoi((char *)outputTrack->children->content));
+					currentTrack++;
+				}
+				outputTrack = outputTrack->next;
+			}
+
+			xmlFree(outputTrack);
+			currentOutput++;
+		}
+
+		current = current->next;
+	}
+
+	xmlFree(current);
+	xmlFree(data);
+
+	for (unsigned int i = 0; i < inputTracks.size(); i++) {
+		for (unsigned int j = 0; j < inputTracks.at(i).size(); j++) {
+			printf("Input: %d\n", inputTracks.at(i).at(j));
+		}
+	}
+
+	for (unsigned int i = 0; i < outputTracks.size(); i++) {
+		for (unsigned int j = 0; j < outputTracks.at(i).size(); j++) {
+			printf("Output: %d\n", outputTracks.at(i).at(j));
+		}
+	}
 
 	// start reading XML file
-	printf("Starting to read XML...\n");
+	printf("Starting to read gp.xml...\n");
 
 	// psuedo code
 
