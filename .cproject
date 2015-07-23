@@ -24,8 +24,8 @@
 								<option id="gnu.cpp.compiler.exe.debug.option.optimization.level.1608187580" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.525227996" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1102502353" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/usr/include/alsa"/>
 									<listOptionValue builtIn="false" value="/usr/include"/>
-									<listOptionValue builtIn="false" value="/usr/include/libxml2"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.dialect.std.253854185" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.files.589348975" name="Include files (-include)" superClass="gnu.cpp.compiler.option.include.files"/>
@@ -36,7 +36,6 @@
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.1042477875" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.572021724" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/include/alsa"/>
-									<listOptionValue builtIn="false" value="/usr/include/libxml2"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.files.1946549363" name="Include files (-include)" superClass="gnu.c.compiler.option.include.files"/>
 								<option id="gnu.c.compiler.option.misc.other.1448841360" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-pthread -c -fmessage-length=0" valueType="string"/>
@@ -44,14 +43,15 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.523505936" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug"/>
 							<tool command="g++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GLDErrorParser" id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.193019994" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
-								<option id="gnu.cpp.link.option.paths.1907904520" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="../"/>
-								</option>
+								<option id="gnu.cpp.link.option.paths.1907904520" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths"/>
 								<option id="gnu.cpp.link.option.libs.1710452645" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="asound"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="xml2"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value=""/>
 									<listOptionValue builtIn="false" value="asound"/>
-									<listOptionValue builtIn="false" value="pthread"/>
 									<listOptionValue builtIn="false" value="xml2"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value=""/>
+									<listOptionValue builtIn="false" value="pthread"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1625832202" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -79,20 +79,10 @@
 							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.1432448365" name="Resource Custom Build Step Output Type"/>
 						</tool>
 					</fileInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.exe.debug.1100438961.2122432566" name="ReadFiles.cpp" rcbsApplicability="disable" resourcePath="ReadFiles.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.545137253.482509671">
-						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.545137253.482509671" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.545137253">
-							<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.452401750" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
-						</tool>
-						<tool customBuildStep="true" id="org.eclipse.cdt.managedbuilder.ui.rcbs.442268673" name="Resource Custom Build Step">
-							<inputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.inputtype.763486263" name="Resource Custom Build Step Input Type">
-								<additionalInput kind="additionalinputdependency" paths=""/>
-							</inputType>
-							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.1679148135" name="Resource Custom Build Step Output Type"/>
-						</tool>
-					</fileInfo>
 					<fileInfo id="cdt.managedbuild.config.gnu.exe.debug.1100438961.915587673" name="main.cpp" rcbsApplicability="disable" resourcePath="main.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.545137253.1432603823">
 						<tool errorParsers="org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.545137253.1432603823" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.545137253">
 							<option id="gnu.cpp.compiler.option.include.paths.245713165" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+								<listOptionValue builtIn="false" value="/usr/include/alsa"/>
 								<listOptionValue builtIn="false" value="/usr/include/libxml2"/>
 							</option>
 							<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1173878132" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -189,4 +179,5 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>
