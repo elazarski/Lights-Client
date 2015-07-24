@@ -286,7 +286,8 @@ void *inThreadFunc(void *channel) {
 						// don't waste any more time
 						break;
 					} else {
-						fprintf(stderr, "INCORRECT NOTE IN CHORD ON CHANNEL %d\n\n", track);
+						fprintf(stderr, "INCORRECT NOTE IN CHORD ON CHANNEL %d\n", track);
+						fprintf(stderr, "Got %d, expecting %d\n\n", (int)ev.data.note.note, (int)currentChord.at(i).num);
 					}
 				}
 
@@ -318,7 +319,8 @@ void *inThreadFunc(void *channel) {
 						// done waste any more time
 						break;
 					} else {
-						fprintf(stderr, "INCORRECT NOTE IN CHANNEL %d\n\n", track);
+						fprintf(stderr, "INCORRECT NOTE IN CHANNEL %d\n", track);
+						fprintf(stderr, "Got %d, expecting %d\n\n", (int)ev.data.note.note, (int)currentChord.at(i).num);
 					}
 				}
 			} else { // not in a chord
@@ -328,7 +330,8 @@ void *inThreadFunc(void *channel) {
 					printf("Correct note received on channel %d\n\n", track);
 					nextNote++;
 				} else {
-					fprintf(stderr, "INCORRECT NOTE ON CHANNEL %d\n\n", track);
+					fprintf(stderr, "INCORRECT NOTE ON CHANNEL %d\n", track);
+					fprintf(stderr, "Got %d, expecting %d\n\n", (int)ev.data.note.note, (int)notes.at(nextNote).num);
 				}
 			}
 		}
