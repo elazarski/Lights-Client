@@ -237,22 +237,34 @@ void *inThreadFunc(void *channel) {
 
 	// unlock dataLock
 	pthread_mutex_unlock(&inputDataLock);
-	printf("Input channel %d ready\n", track);
 
-	// declare variables relating to part
-
-	// will change when current part is done, used in main loop
+	// necessary variables and vectors
 	bool partDone = false;
 
-	// index of next note
-	int nextNote = 0;
+	// index variables
+	int currentChord = 0;
+	int currentNote = 0;
 
-	// chord stuffs
-	int *chordEnd, *finishedNotes;
-	vector<Event> currentChord;
-	bool inChord = false;
+	// chord vector
+	// contains indexes of beginning and ending of chords
+	vector<vector<int> > chords;
 
+	float prevTime = notes.at(0).time;
 
+	// populate chords
+	for (unsigned int i = 1; i < notes.size(); i++) {
+		float curTime = notes.at(i).time;
+
+		if (prevTime >= curTime - 0.0001 && prevTime <= curTime + 0.0001) {
+			printf("Chord on channel %d, index %d\n", track, i);
+		}
+
+		prevTime = curTime;
+	}
+
+	printf("Input channel %d ready\n", track);
+
+	/*
 	// main loop
 	while (!partDone) {
 		snd_seq_event_t ev;
@@ -291,7 +303,7 @@ void *inThreadFunc(void *channel) {
 					}
 				}
 
-			} else if (notes.at(nextNote).time == notes.at(nextNote + 1).time) {
+			} else if (notes.at(nextNote).time > notes.at(nextNote + 1).time - 0.012 || notes.at(nextNote).time <= notes.at(nextNote + 1).time + 0.012) {
 				// check if we should be in a chord and populate it
 				*finishedNotes = 0;
 				currentChord.push_back(notes.at(nextNote));
@@ -347,11 +359,9 @@ void *inThreadFunc(void *channel) {
 		}
 
 		ev.type = NULL;
-	}
+	}*/
 
 	free(convertedPTR);
-	free(chordEnd);
-	free(finishedNotes);
 
 	return NULL;
 }
