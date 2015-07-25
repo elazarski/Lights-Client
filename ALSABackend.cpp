@@ -264,6 +264,10 @@ void *inThreadFunc(void *channel) {
 
 	printf("Input channel %d ready\n", track);
 
+	for (unsigned int i = 0; i < notes.size(); i++) {
+		printf("Channel: %d, Time: %f\n", track, notes.at(i).time);
+	}
+
 	/*
 	// main loop
 	while (!partDone) {

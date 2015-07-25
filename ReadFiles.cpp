@@ -380,7 +380,7 @@ vector<Event> parsePart(xmlNodePtr cur, int track) {
 			i = part.erase(i);
 			size--;
         } else {                                        // increment i
-			printf("Time: %f\n", i->time);
+			//printf("Time: %f\n", i->time);
 			i++;
 		}
 	}
