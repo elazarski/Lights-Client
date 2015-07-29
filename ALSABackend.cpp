@@ -247,27 +247,32 @@ void *inThreadFunc(void *channel) {
 
 	// chord vector
 	// contains indexes of beginning and ending of chords
-	vector<vector<int> > chords;
+	vector<vector<int> > chords(1, vector<int>(0));
 
 	float prevTime = notes.at(0).time;
+
+	if (notes.at(0).type == CHORD) {
+		chords.at(0).push_back(0);
+	}
 
 	// populate chords
 	for (unsigned int i = 1; i < notes.size(); i++) {
 		float curTime = notes.at(i).time;
 
-		if (prevTime >= curTime - 0.0001 && prevTime <= curTime + 0.0001) {
-			printf("Chord on channel %d, index %d\n", track, i);
+		if (notes.at(i).type == CHORD) {
+			// put chord in the proper second vector of chords
+			if (prevTime == curTime) {
+				// still previous chord
+				chords.at(chords.size() - 1).push_back(i);
+			} else {
+				// next chord
+				chords.push_back(vector<int>(0));
+				chords.at(chords.size() - 1).push_back(i);
+			}
 		}
-
-		prevTime = curTime;
 	}
 
 	printf("Input channel %d ready\n", track);
-
-	for (unsigned int i = 0; i < notes.size(); i++) {
-		printf("Channel: %d, Time: %f\n", track, notes.at(i).time);
-	}
-
 	/*
 	// main loop
 	while (!partDone) {

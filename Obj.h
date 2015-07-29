@@ -3,7 +3,7 @@
 
 using namespace std;
 
-enum Type {NOTE, REST, META};
+enum Type {NOTE, REST, META, CHORD};
 
 #ifndef EVENT_H
 #define EVENT_H

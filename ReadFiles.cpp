@@ -263,6 +263,7 @@ vector<Event> parsePart(xmlNodePtr cur, int track) {
 	float lastTime = 0.0;
 	int forwardRepeatIndex = 0;
 	int timeSig;
+	float lastDur = 0.0;
 
 	if (track < 0) { // do not parse for part, merely tempo
 
@@ -340,26 +341,39 @@ vector<Event> parsePart(xmlNodePtr cur, int track) {
 						}
 					} else {
 
-						/* chord:		type = NOTE, time = duration, num = noteNum, channel = 1
+						/* chord:		type = CHORD, time = duration, num = noteNum, channel = 1
 						 * note:		type = NOTE, time = duration, num = noteNum, channel = 0
 						 */
 
 						if (currentMeasure.at(i).channel == 1) { 			// chord
 							part.push_back(currentMeasure.at(i));
 							part.at(part.size() - 1).time = lastTime;
-							if (currentMeasure.at(i + 1).type == NOTE && currentMeasure.at(i + 1).channel != 1) { // change time for next note
-								lastTime = lastTime + currentMeasure.at(i).time * timeSig/divisions/4;
-							}
 							part.at(part.size() - 1).channel = track;
+							lastDur = currentMeasure.at(i).time;
 						} else {											// normal note
 							part.push_back(currentMeasure.at(i));
+
+							// check if previous note was chord
+							if (part.size() > 1 && part.at(part.size() - 2).type == CHORD) {
+								// change lastTime so that it is when the previous chord ends
+								lastTime = lastTime + lastDur * timeSig/divisions/4;
+							}
 							part.at(part.size() - 1).time = lastTime;
-							lastTime = lastTime + currentMeasure.at(i).time * timeSig/divisions/4;
+
+							// check if next note is chord
+							if (currentMeasure.size() > i + 1 && currentMeasure.at(i + 1).type != CHORD) {
+
+								// if we are here we are not parsing a chord
+								lastTime = lastTime + currentMeasure.at(i).time * timeSig/divisions/4;
+							} else {
+								// we are in a chord, so change the type to a CHORD
+								part.at(part.size() - 1).type = CHORD;
+							}
 							part.at(part.size() - 1).channel = track;
 						}
 					}
 
-					//printf("%d\n", currentMeasure.at(i).time);
+
 				}
 
 			}
@@ -380,13 +394,14 @@ vector<Event> parsePart(xmlNodePtr cur, int track) {
 			i = part.erase(i);
 			size--;
         } else {                                        // increment i
-			//printf("Time: %f\n", i->time);
+//			printf("Time: %f\n", i->time);
 			i++;
 		}
 	}
 
 	for (unsigned int i = 0; i < part.size(); i++) {
         part.at(i).channel = track;
+        //printf("Channel: %d, Time: %f\n", track, part.at(i).time);
 	}
 
 	return part;
@@ -468,6 +483,7 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 			xmlNodePtr note = cur->children; // in <note>
 
 			Event n;
+			n.channel = 0;
 
 			while (note != NULL) {
 				// check for different types of data that can be found in <note>
@@ -475,7 +491,11 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 				if (strcmp((char *)note->name, "pitch") == 0) {
 					xmlNodePtr pitch = note->children;
 					char *alter, *step, *octave;
-					n.channel = 0;
+
+					if (n.channel != 1 && n.type != CHORD) {
+						n.channel = 0;
+						n.type = NOTE;
+					}
 
 					while (pitch != NULL) {
 						if (strcmp((char *)pitch->name, "step") == 0) {
@@ -489,9 +509,9 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 					}
 
 					n.num = parsePitch(step, alter, octave);
-					n.type = NOTE;
 				} else if (strcmp((char *)note->name, "chord") == 0) {
 					n.channel = 1;
+					n.type = CHORD;
 				} else if (strcmp((char *)note->name, "duration") == 0) {
 					n.time = atoi((char *)note->children->content);
 				} else if (strcmp((char *)note->name, "rest") == 0) {
