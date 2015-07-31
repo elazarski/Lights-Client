@@ -233,21 +233,18 @@ void *inThreadFunc(void *channel) {
 
 	tempo = inputData.tempo;
 
-	inputReady.at(track) = true;
-
-	// unlock dataLock
-	pthread_mutex_unlock(&inputDataLock);
-
 	// necessary variables and vectors
 	bool partDone = false;
 
 	// index variables
-	int currentChord = 0;
-	int currentNote = 0;
+	unsigned int currentChord = 0;
+	unsigned int numInChord = 0;
+	unsigned int currentNote = 0;
+
 
 	// chord vector
 	// contains indexes of beginning and ending of chords
-	vector<vector<int> > chords(1, vector<int>(0));
+	vector<vector<unsigned int> > chords(1, vector<unsigned int>(2));
 
 	float prevTime = notes.at(0).time;
 
@@ -259,21 +256,39 @@ void *inThreadFunc(void *channel) {
 	for (unsigned int i = 1; i < notes.size(); i++) {
 		float curTime = notes.at(i).time;
 
-		if (notes.at(i).type == CHORD) {
-			// put chord in the proper second vector of chords
-			if (prevTime == curTime) {
-				// still previous chord
-				chords.at(chords.size() - 1).push_back(i);
-			} else {
-				// next chord
-				chords.push_back(vector<int>(0));
-				chords.at(chords.size() - 1).push_back(i);
+		if (notes.at(i).type == CHORD) { // current note is part of a chord
+
+			// check if this is the start of a chord
+			if (notes.at(i - 1).type != CHORD) { // previous note is not a chord
+				chords.push_back(vector<unsigned int>(2));
+				chords.at(chords.size() - 1).at(0) = i;
+			} else { // previous note is in a chord
+				// could still be a new chord, maybe chords follow each other.
+				// check time next
+				if (prevTime != curTime) {
+					chords.at(chords.size() - 1).at(1) = i - 1;
+
+					// previous chord just finished, so add current index as a start of a new chord
+					chords.push_back(vector<unsigned int>(2));
+					chords.at(chords.size() - 1).at(0) = i;
+				}
 			}
+		} else if (notes.at(i - 1).type == CHORD){ // previous note is a chord, but current note is not
+
+			// finish previous chord
+			chords.at(chords.size() - 1).at(1) = i - 1;
 		}
+
+		prevTime = curTime;
 	}
 
+	inputReady.at(track) = true;
+
+	// unlock dataLock
+	pthread_mutex_unlock(&inputDataLock);
+
 	printf("Input channel %d ready\n", track);
-	/*
+
 	// main loop
 	while (!partDone) {
 		snd_seq_event_t ev;
@@ -289,86 +304,60 @@ void *inThreadFunc(void *channel) {
 		// check if note on event
 		if (ev.type == SND_SEQ_EVENT_NOTEON) {
 
-			// populate chordEnd if we are in a chord
-			// first, check if inChord is true
-			if (inChord) {
-				// check if received note is correct
-				for (unsigned int i = 0; i < currentChord.size(); i++) {
-					if (ev.data.note.note == currentChord.at(i).num) {
-						printf("Correct note received in chord on channel %d\n", track);
-						*finishedNotes++;
-						nextNote++;
+			// check if we are in a chord
+			if (currentChord < chords.size() &&
+					(currentNote >= chords.at(currentChord).at(0) &&
+					 currentNote <= chords.at(currentChord).at(1))) {
 
-						if ((unsigned int)*finishedNotes >= currentChord.size()) {
-							inChord = false;
-							printf("\n");
+				// create vector of notes for current chord
+				vector<Event> chord(chords.at(currentChord).at(1) - chords.at(currentChord).at(0));
+
+				// populate chord
+				for (unsigned int i = 0; i < chord.size(); i++) {
+					chord.at(i) = notes.at(chords.at(currentChord).at(0) + i);
+				}
+
+				// loop through chord and check if received note is in it
+				for (unsigned int i = 0; i < chord.size(); i++) {
+					if (ev.data.note.note == chord.at(i).num) {
+						printf("Correct note received in chord on channel %d\n", track);
+						currentNote++;
+
+						numInChord++;
+						if (numInChord == chord.size()) {
+							currentChord++;
+							numInChord++;
 						}
 
-						// don't waste any more time
+						// exit chord loop
 						break;
-					} else {
-						fprintf(stderr, "INCORRECT NOTE IN CHORD ON CHANNEL %d\n", track);
-						fprintf(stderr, "Got %d, expecting %d\n\n", (int)ev.data.note.note, (int)currentChord.at(i).num);
 					}
 				}
-
-			} else if (notes.at(nextNote).time > notes.at(nextNote + 1).time - 0.012 || notes.at(nextNote).time <= notes.at(nextNote + 1).time + 0.012) {
-				// check if we should be in a chord and populate it
-				*finishedNotes = 0;
-				currentChord.push_back(notes.at(nextNote));
-				Event next = notes.at(nextNote + 1);
-				int i = 1;
-				while (notes.at(nextNote).time == next.time) {
-					currentChord.push_back(next);
-					i++;
-					next = notes.at(nextNote + i);
-				}
-
-				// check if note was correct
-				for (unsigned int i = 0; i < currentChord.size(); i++) {
-					if (ev.data.note.note == currentChord.at(i).num) {
-						printf("Correct note received in chord on channel %d\n", track);
-						*finishedNotes++;
-						nextNote++;
-
-						// check if chord is done
-						if ((unsigned int)*finishedNotes >= currentChord.size()) {
-							inChord = false;
-							printf("\n");
-						}
-
-						// done waste any more time
-						break;
-					} else {
-						fprintf(stderr, "INCORRECT NOTE IN CHANNEL %d\n", track);
-						fprintf(stderr, "Got %d, expecting %d\n\n", (int)ev.data.note.note, (int)currentChord.at(i).num);
-					}
-				}
-			} else { // not in a chord
+			} else { // we are not currently in a chord
 
 				// check if note is correct
-				if (ev.data.note.note == notes.at(nextNote).num) {
+				if (ev.data.note.note == notes.at(currentNote).num) {
 					printf("Correct note received on channel %d\n\n", track);
-					nextNote++;
+					currentNote++;
 				} else {
 					fprintf(stderr, "INCORRECT NOTE ON CHANNEL %d\n", track);
-					fprintf(stderr, "Got %d, expecting %d\n\n", (int)ev.data.note.note, (int)notes.at(nextNote).num);
+					fprintf(stderr, "Got %d, expecting %d\n\n", (int)ev.data.note.note, (int)notes.at(currentNote).num);
 				}
 			}
 		}
 
-		// check if part is done
-		if ((unsigned int)nextNote >= notes.size()) {
-			partDone = true;
 
-			// inform main thread that this part is done
-			pthread_mutex_lock(&inputFinishedLock);
-			inputReady.at(track) = true;
-			pthread_mutex_unlock(&inputFinishedLock);
-		}
+	// check if part is done
+	if ((unsigned int)currentNote >= notes.size()) {
+		partDone = true;
+		// inform main thread that this part is done
+		pthread_mutex_lock(&inputFinishedLock);
+		inputReady.at(track) = true;
+		pthread_mutex_unlock(&inputFinishedLock);
+	}
 
 		ev.type = NULL;
-	}*/
+	}
 
 	free(convertedPTR);
 
