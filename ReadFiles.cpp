@@ -25,7 +25,6 @@ int checkTracks(vector<vector<int> > inputTracks, vector<int> mp, vector<vector<
 vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTracks) {
 	string path;
 	ifstream file; // read data file for info on MIDI file
-	int num;
 
 	// fullArray[0] reserved for status messages
 	vector<Event> fullArray(1);
@@ -201,6 +200,7 @@ vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTrac
 		cur = cur->next;
 	}
 
+	xmlFree(cur);
 	xmlFree(doc);
 
 	// sort fullArray based on time
@@ -257,6 +257,7 @@ int checkTracks(vector<vector<int> > inputTracks, vector<int> mp, vector<vector<
 
 // parse XML track, returns vector of parsed events
 vector<Event> parsePart(xmlNodePtr cur, int track) {
+
 	vector<Event> part;
 	xmlNodePtr currentPart = cur->children->next;
 	int divisions;
@@ -285,6 +286,8 @@ vector<Event> parsePart(xmlNodePtr cur, int track) {
 			}
 			m1 = m1->next;
 		}
+
+		xmlFree(m1);
 	} else { // get note data for part
 		while (currentPart != NULL) {
 			if (strcmp((char *)currentPart->name, "measure") == 0) { // get data measure by measure
@@ -404,6 +407,8 @@ vector<Event> parsePart(xmlNodePtr cur, int track) {
         //printf("Channel: %d, Time: %f\n", track, part.at(i).time);
 	}
 
+	xmlFree(currentPart);
+
 	return part;
 }
 
@@ -424,8 +429,10 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 		// divisions will be in attributes
 		if (strcmp((char *)cur->name, "attributes") == 0) {
 			xmlNodePtr attr = cur->children;
+
 			while (attr != NULL) {
 				if (strcmp((char *)attr->name, "divisions") == 0) {
+
 					xmlChar *div = attr->children->content;
 					divisions = atoi((char *)div);
 					xmlFree(div);
@@ -439,9 +446,12 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 
 					events.push_back(ev);
 				} else if (strcmp((char *)attr->name, "time") == 0) {
+
 					xmlNodePtr time = attr->children;
+
 					while (time != NULL) {
 						if (strcmp((char *)time->name, "beat-type") == 0) {
+
 							Event ev;
 							ev.type = META;
 							ev.num = atoi((char *)time->children->content);
@@ -456,11 +466,16 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 				}
 				attr = attr->next;
 			}
+
+			xmlFree(attr);
 		} else if (strcmp((char *)cur->name, "barline") == 0) {
+
 			// check for <repeat>
 			xmlNodePtr bar = cur->children;
+
 			while (bar != NULL) {
 				if (strcmp((char *)bar->name, "repeat") == 0) {
+
 					// forwards or backwards?
 					xmlChar *direction = xmlGetProp(bar, (xmlChar *)"direction");
 
@@ -468,9 +483,11 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 						rep.time = -1;
 						events.push_back(rep);
 					} else {
+
 						xmlChar *times = xmlGetProp(bar, (xmlChar *)"times");
 						rep.time = 1;
 						rep.num = (atoi((char *)times));
+
 						xmlFree(times);
 						// check for rep.num == 1 later to rep to events rep.time times at end
 					}
@@ -479,7 +496,10 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 				}
 				bar = bar->next;
 			}
+
+			xmlFree(bar);
 		} else if (strcmp((char *)cur->name, "note") == 0) { // gather note data
+
 			xmlNodePtr note = cur->children; // in <note>
 
 			Event n;
@@ -489,8 +509,12 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 				// check for different types of data that can be found in <note>
 
 				if (strcmp((char *)note->name, "pitch") == 0) {
+
 					xmlNodePtr pitch = note->children;
-					char *alter, *step, *octave;
+					xmlChar *alter, *step, *octave;
+					alter = NULL;
+					step = NULL;
+					octave = NULL;
 
 					if (n.channel != 1 && n.type != CHORD) {
 						n.channel = 0;
@@ -498,17 +522,37 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 					}
 
 					while (pitch != NULL) {
+
 						if (strcmp((char *)pitch->name, "step") == 0) {
-							step = (char *)pitch->children->content;
+							step = pitch->children->content;
+							//printf("Have step\n");
 						} else if (strcmp((char *)pitch->name, "alter") == 0) {
-							alter = (char *)pitch->children->content;
+							alter = pitch->children->content;
+							//printf("Have alter\n");
 						} else if (strcmp((char *)pitch->name, "octave") == 0) {
-							octave = (char *)pitch->children->content;
+							octave = pitch->children->content;
+							//printf("Have octave\n");
 						}
+
 						pitch = pitch->next;
 					}
 
-					n.num = parsePitch(step, alter, octave);
+					n.num = parsePitch((char *)step, (char *)alter, (char *)octave);
+
+					if (alter != NULL) {
+						xmlFree(alter);
+					}
+
+					if (step != NULL) {
+						xmlFree(step);
+					}
+
+					if (octave != NULL) {
+						xmlFree(octave);
+					}
+
+					xmlFree(pitch);
+
 				} else if (strcmp((char *)note->name, "chord") == 0) {
 					n.channel = 1;
 					n.type = CHORD;
@@ -520,7 +564,9 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 				}
 				note = note->next;
 			}
+
 			events.push_back(n);
+			xmlFree(note);
 		}
 		cur = cur->next;
 	}
@@ -562,7 +608,7 @@ int parsePitch(char *step, char *alter, char *octave) {
 		ret = 11;
 		break;
 	default:
-		fprintf(stderr, "ERROR READING FILE\n");
+		fprintf(stderr, "ERROR READING PITCH\n");
 		break;
 	}
 

@@ -263,7 +263,9 @@ void *inThreadFunc(void *channel) {
 				chords.push_back(vector<unsigned int>(2));
 				chords.at(chords.size() - 1).at(0) = i;
 			} else { // previous note is in a chord
+
 				// could still be a new chord, maybe chords follow each other.
+
 				// check time next
 				if (prevTime != curTime) {
 					chords.at(chords.size() - 1).at(1) = i - 1;
@@ -275,8 +277,13 @@ void *inThreadFunc(void *channel) {
 			}
 		} else if (notes.at(i - 1).type == CHORD){ // previous note is a chord, but current note is not
 
-			// finish previous chord
-			chords.at(chords.size() - 1).at(1) = i - 1;
+			// check if time is the same. if it is, next note is end of chord
+			if (prevTime == curTime) {
+				chords.at(chords.size() - 1).at(1) = i;
+			} else {
+				// finish previous chord
+				chords.at(chords.size() - 1).at(1) = i - 1;
+			}
 		}
 
 		prevTime = curTime;
