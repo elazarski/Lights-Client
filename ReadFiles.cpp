@@ -502,6 +502,7 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 
 			xmlNodePtr note = cur->children; // in <note>
 
+			bool tie = false;
 			Event n;
 			n.channel = 0;
 
@@ -561,9 +562,16 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 				} else if (strcmp((char *)note->name, "rest") == 0) {
 					n.type = META;
 					n.channel = 4;
+				} else if (strcmp((char *)note->name, "tie") == 0) {
+					xmlChar *tie = xmlGetProp(note, (xmlChar *)"type");
+
+					if (strcmp((char *)tie, "stop") == 0) {
+						tie = true;
+					}
 				}
 				note = note->next;
 			}
+
 
 			events.push_back(n);
 			xmlFree(note);
