@@ -572,6 +572,14 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 				note = note->next;
 			}
 
+			// if tied note is ending, make current note a rest
+			// currently, the end of a note does not matter, just the beginning
+			if (tie) {
+				n.type = META;
+				n.channel = 4;
+
+				tie = false;
+			}
 
 			events.push_back(n);
 			xmlFree(note);
