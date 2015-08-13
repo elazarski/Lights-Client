@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lxml2 -lasound -lpthread
+LIBS := -lasound -lxml2 -lasound -lpthread
 

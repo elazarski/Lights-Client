@@ -563,9 +563,9 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 					n.type = META;
 					n.channel = 4;
 				} else if (strcmp((char *)note->name, "tie") == 0) {
-					xmlChar *tie = xmlGetProp(note, (xmlChar *)"type");
+					xmlChar *tieChar = xmlGetProp(note, (xmlChar *)"type");
 
-					if (strcmp((char *)tie, "stop") == 0) {
+					if (strcmp((char *)tieChar, "stop") == 0) {
 						tie = true;
 					}
 				}

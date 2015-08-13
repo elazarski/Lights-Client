@@ -24,8 +24,8 @@
 								<option id="gnu.cpp.compiler.exe.debug.option.optimization.level.1608187580" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.525227996" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1102502353" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/usr/include/libxml2"/>
 									<listOptionValue builtIn="false" value="/usr/include/alsa"/>
+									<listOptionValue builtIn="false" value="/usr/include/libxml2"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.dialect.std.253854185" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.files.589348975" name="Include files (-include)" superClass="gnu.cpp.compiler.option.include.files"/>
@@ -35,8 +35,8 @@
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.exe.debug.option.optimization.level.1252326425" name="Optimization Level" superClass="gnu.c.compiler.exe.debug.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.1042477875" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.572021724" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/usr/include/libxml2"/>
 									<listOptionValue builtIn="false" value="/usr/include/alsa"/>
+									<listOptionValue builtIn="false" value="/usr/include/libxml2"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.files.1946549363" name="Include files (-include)" superClass="gnu.c.compiler.option.include.files"/>
 								<option id="gnu.c.compiler.option.misc.other.1448841360" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-pthread -c -fmessage-length=0" valueType="string"/>
@@ -48,10 +48,10 @@
 									<listOptionValue builtIn="false" value="../"/>
 								</option>
 								<option id="gnu.cpp.link.option.libs.1710452645" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="asound"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value=""/>
 									<listOptionValue builtIn="false" value="xml2"/>
 									<listOptionValue builtIn="false" value="asound"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value=""/>
 									<listOptionValue builtIn="false" value="pthread"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1625832202" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
@@ -67,8 +67,8 @@
 					<fileInfo id="cdt.managedbuild.config.gnu.exe.debug.1100438961.458662303" name="ALSABackend.cpp" rcbsApplicability="disable" resourcePath="ALSABackend.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.545137253.2002211034">
 						<tool errorParsers="org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.545137253.2002211034" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.545137253">
 							<option id="gnu.cpp.compiler.option.include.paths.485476107" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-								<listOptionValue builtIn="false" value="/usr/include/libxml2"/>
 								<listOptionValue builtIn="false" value="/usr/include/alsa"/>
+								<listOptionValue builtIn="false" value="/usr/include/libxml2"/>
 							</option>
 							<option id="gnu.cpp.compiler.option.dialect.std.960419066" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
 							<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.678983337" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -83,8 +83,8 @@
 					<fileInfo id="cdt.managedbuild.config.gnu.exe.debug.1100438961.915587673" name="main.cpp" rcbsApplicability="disable" resourcePath="main.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.545137253.1432603823">
 						<tool errorParsers="org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.545137253.1432603823" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.545137253">
 							<option id="gnu.cpp.compiler.option.include.paths.245713165" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-								<listOptionValue builtIn="false" value="/usr/include/libxml2"/>
 								<listOptionValue builtIn="false" value="/usr/include/alsa"/>
+								<listOptionValue builtIn="false" value="/usr/include/libxml2"/>
 							</option>
 							<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1173878132" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 						</tool>

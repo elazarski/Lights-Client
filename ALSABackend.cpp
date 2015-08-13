@@ -249,11 +249,11 @@ void *inThreadFunc(void *channel) {
 	float prevTime = notes.at(0).time;
 
 	if (notes.at(0).type == CHORD) {
-		chords.at(0).push_back(0);
+		chords.at(0).at(0) = 0;
 	}
 
 	// populate chords
-	for (unsigned int i = 1; i < notes.size(); i++) {
+	for (unsigned int i = 1; i < notes.size() - 1; i++) {
 		float curTime = notes.at(i).time;
 
 		if (notes.at(i).type == CHORD) { // current note is part of a chord
@@ -272,7 +272,7 @@ void *inThreadFunc(void *channel) {
 
 					// previous chord just finished, so add current index as a start of a new chord
 					chords.push_back(vector<unsigned int>(2));
-					chords.at(chords.size() - 1).at(0) = i;
+					chords.at(chords.size() - 1).at(0) = i - 1;
 				}
 			}
 		} else if (notes.at(i - 1).type == CHORD){ // previous note is a chord, but current note is not
@@ -349,6 +349,7 @@ void *inThreadFunc(void *channel) {
 				} else {
 					fprintf(stderr, "INCORRECT NOTE ON CHANNEL %d\n", track);
 					fprintf(stderr, "Got %d, expecting %d\n\n", (int)ev.data.note.note, (int)notes.at(currentNote).num);
+					//currentNote++;
 				}
 			}
 		}
