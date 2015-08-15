@@ -236,11 +236,20 @@ void *inThreadFunc(void *channel) {
 	// necessary variables and vectors
 	bool partDone = false;
 
+	for (unsigned int i = 0; i < notes.size(); i++) {
+		char num = notes.at(i).num;
+		char chan = notes.at(i).channel;
+		float time = notes.at(i).time;
+		char type = notes.at(i).type;
+
+		printf("Channel %d:", track);
+		printf("	%d, %d, %d, %f\n", (int)num, (int)chan, (int)type, time);
+	}
+
 	// index variables
 	unsigned int currentChord = 0;
 	unsigned int numInChord = 0;
 	unsigned int currentNote = 0;
-
 
 	// chord vector
 	// contains indexes of beginning and ending of chords
@@ -290,11 +299,19 @@ void *inThreadFunc(void *channel) {
 		prevTime = curTime;
 	}
 
-	/*
+
 	if (chords.empty()) {
+		printf("Chords empty on channel %d\n", track);
+		chords.push_back(vector<unsigned int>(2));
 		chords.at(0).at(0) = -1;
 		chords.at(0).at(1) = -1;
-	}*/
+	} else {
+		for (unsigned int i = 0; i < chords.size(); i++) {
+			unsigned int chordSize = chords.at(i).at(1) - chords.at(i).at(0);
+
+			printf("Chord %d on channel %d is %d\n", i, track, chordSize);
+		}
+	}
 
 	inputReady.at(track) = true;
 
@@ -303,10 +320,10 @@ void *inThreadFunc(void *channel) {
 
 	printf("Input channel %d ready\n", track);
 
-
-	if (notes.at(0).num == 0) {
+	if (notes.at(0).channel == 0) {
 		currentNote++;
 	}
+
 	// main loop
 	while (!partDone) {
 		snd_seq_event_t ev;
@@ -328,7 +345,7 @@ void *inThreadFunc(void *channel) {
 					 currentNote <= chords.at(currentChord).at(1))) {
 
 				// create vector of notes for current chord
-				vector<Event> chord(chords.at(currentChord).at(1) - chords.at(currentChord).at(0));
+				vector<Event> chord(chords.at(currentChord).at(1) - chords.at(currentChord).at(0) + 1);
 
 				// populate chord
 				for (unsigned int i = 0; i < chord.size(); i++) {
@@ -360,7 +377,7 @@ void *inThreadFunc(void *channel) {
 				} else {
 					fprintf(stderr, "INCORRECT NOTE ON CHANNEL %d\n", track);
 					fprintf(stderr, "	Got %d, expecting %d\n", (int)ev.data.note.note, (int)notes.at(currentNote).num);
-					//currentNote++;
+					currentNote++;
 				}
 			}
 		}

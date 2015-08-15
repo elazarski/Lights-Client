@@ -277,7 +277,7 @@ vector<Event> parsePart(xmlNodePtr cur, int track) {
 				Event ev;
 				ev.type = META;
 				ev.num = atoi((char *)tempo);
-				ev.channel = 0;
+				ev.channel = -1;
 				ev.time = 0;
 
 				part.push_back(ev);
@@ -513,9 +513,9 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 
 					xmlNodePtr pitch = note->children;
 					xmlChar *alter, *step, *octave;
-					alter = 0;
-					step = 0;
-					octave = 0;
+					alter = NULL;
+					step = NULL;
+					octave = NULL;
 
 					if (n.channel != 1 && n.type != CHORD) {
 						n.channel = 0;
@@ -540,17 +540,12 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 
 					n.num = parsePitch((char *)step, (char *)alter, (char *)octave);
 
-					if (alter != NULL) {
+					if (alter != NULL)
 						xmlFree(alter);
-					}
-
-					if (step != NULL) {
+					if (step != NULL)
 						xmlFree(step);
-					}
-
-					if (octave != NULL) {
+					if (octave != NULL)
 						xmlFree(octave);
-					}
 
 					xmlFree(pitch);
 
@@ -598,7 +593,7 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 
 // convert XML values into numerical note value
 int parsePitch(char *step, char *alter, char *octave) {
-	// return note num based on step, alter, and octave values
+	// return note number based on step, alter, and octave values
 	int ret = 0;
 
 	switch((int)*step) {
@@ -630,9 +625,9 @@ int parsePitch(char *step, char *alter, char *octave) {
 
 	ret = ret + atoi(octave) * 12;
 
-    if (alter != NULL) {
-        ret = ret + atoi(alter);
-    }
+	// alter is for # and b notes
+	if (alter != NULL)
+		ret = ret + atoi(alter);
 
 	return ret;
 }
