@@ -513,9 +513,9 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 
 					xmlNodePtr pitch = note->children;
 					xmlChar *alter, *step, *octave;
-					alter = NULL;
-					step = NULL;
-					octave = NULL;
+					alter = 0;
+					step = 0;
+					octave = 0;
 
 					if (n.channel != 1 && n.type != CHORD) {
 						n.channel = 0;

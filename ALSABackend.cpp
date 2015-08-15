@@ -244,11 +244,12 @@ void *inThreadFunc(void *channel) {
 
 	// chord vector
 	// contains indexes of beginning and ending of chords
-	vector<vector<unsigned int> > chords(1, vector<unsigned int>(2));
+	vector<vector<unsigned int> > chords;
 
 	float prevTime = notes.at(0).time;
 
 	if (notes.at(0).type == CHORD) {
+		chords.push_back(vector<unsigned int>(2));
 		chords.at(0).at(0) = 0;
 	}
 
@@ -289,6 +290,12 @@ void *inThreadFunc(void *channel) {
 		prevTime = curTime;
 	}
 
+	/*
+	if (chords.empty()) {
+		chords.at(0).at(0) = -1;
+		chords.at(0).at(1) = -1;
+	}*/
+
 	inputReady.at(track) = true;
 
 	// unlock dataLock
@@ -296,6 +303,10 @@ void *inThreadFunc(void *channel) {
 
 	printf("Input channel %d ready\n", track);
 
+
+	if (notes.at(0).num == 0) {
+		currentNote++;
+	}
 	// main loop
 	while (!partDone) {
 		snd_seq_event_t ev;
@@ -344,11 +355,11 @@ void *inThreadFunc(void *channel) {
 
 				// check if note is correct
 				if (ev.data.note.note == notes.at(currentNote).num) {
-					printf("Correct note received on channel %d\n\n", track);
+					printf("Correct note received on channel %d, Note %d\n", track, (int)ev.data.note.note);
 					currentNote++;
 				} else {
 					fprintf(stderr, "INCORRECT NOTE ON CHANNEL %d\n", track);
-					fprintf(stderr, "Got %d, expecting %d\n\n", (int)ev.data.note.note, (int)notes.at(currentNote).num);
+					fprintf(stderr, "	Got %d, expecting %d\n", (int)ev.data.note.note, (int)notes.at(currentNote).num);
 					//currentNote++;
 				}
 			}
