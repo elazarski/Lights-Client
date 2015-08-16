@@ -1,5 +1,4 @@
 // reads data from multiple files and returns data usable by the ALSA backend
-#include <fstream>
 #include <vector>
 #include <libxml/xmlreader.h>
 #include <libxml/tree.h>
@@ -24,7 +23,6 @@ int checkTracks(vector<vector<int> > inputTracks, vector<int> mp, vector<vector<
 // reads all files and returns vector<Event> of all events to be handled, sorted by time.
 vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTracks) {
 	string path;
-	ifstream file; // read data file for info on MIDI file
 
 	// fullArray[0] reserved for status messages
 	vector<Event> fullArray(1);
@@ -115,6 +113,7 @@ vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTrac
 	xmlFree(current);
 	xmlFree(data);
 
+	/*
 	for (unsigned int i = 0; i < inputTracks.size(); i++) {
 		for (unsigned int j = 0; j < inputTracks.at(i).size(); j++) {
 			printf("Input: %d\n", inputTracks.at(i).at(j));
@@ -126,6 +125,7 @@ vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTrac
 			printf("Output: %d\n", outputTracks.at(i).at(j));
 		}
 	}
+	 */
 
 	// start reading XML file
 	printf("Starting to read gp.xml...\n");
@@ -179,13 +179,12 @@ vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTrac
 					&(ostringstream() << 1))->str()).c_str()) == 0) {
 
 					// at the very least, get tempo from P1
-					vector<Event> part;
-					part = parsePart(cur, -1);
+					vector<Event> part = parsePart(cur, -1);
 
 					// add to fullArray
 					fullArray.push_back(part.at(0));
-				} else if (track >= 0) {
 
+				} else if (track >= 0) {
 
 					vector<Event> part = parsePart(cur, track);
 
@@ -312,9 +311,7 @@ vector<Event> parsePart(xmlNodePtr cur, int track) {
 						} else if (currentMeasure.at(i).channel == 2) { 	// repeat
 							if (currentMeasure.at(i).time == -1) { 			// forward
 
-								// add 1 to the current size so that
-								// the repeat starts on the next note
-								// in the array
+								// repeat index starts at next event, so part.size() is correct
 								forwardRepeatIndex = part.size();
 							} else { 										// backward
 
@@ -445,8 +442,8 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 					ev.time = 0;
 
 					events.push_back(ev);
-				} else if (strcmp((char *)attr->name, "time") == 0) {
 
+				} else if (strcmp((char *)attr->name, "time") == 0) {
 					xmlNodePtr time = attr->children;
 
 					while (time != NULL) {
@@ -489,7 +486,7 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 						rep.num = (atoi((char *)times));
 
 						xmlFree(times);
-						// check for rep.num == 1 later to rep to events rep.time times at end
+						// check for rep.num == 1 later to repeat events rep.time times at end
 					}
 
 					xmlFree(direction);
@@ -562,6 +559,9 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 
 					if (strcmp((char *)tieChar, "stop") == 0) {
 						tie = true;
+
+						n.type = META;
+						n.channel = 4;
 					}
 				}
 				note = note->next;
@@ -570,19 +570,25 @@ vector<Event> parseMeasure(xmlNodePtr cur) {
 			// if tied note is ending, make current note a rest
 			// currently, the end of a note does not matter, just the beginning
 			if (tie) {
+				//printf("Tie\n");
 				n.type = META;
 				n.channel = 4;
 
 				tie = false;
 			}
 
+			if (n.type == CHORD) {
+				events.at(events.size() - 1).type = CHORD;
+			}
+
 			events.push_back(n);
+
 			xmlFree(note);
 		}
 		cur = cur->next;
 	}
 
-	if (rep.time != -1) {
+	if (rep.time == 1) {
 		for (int i = 0; i < rep.num; i++) {
 			events.push_back(rep);
 		}

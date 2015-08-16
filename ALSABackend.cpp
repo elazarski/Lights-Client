@@ -289,7 +289,7 @@ void *inThreadFunc(void *channel) {
 
 			// check if time is the same. if it is, next note is end of chord
 			if (prevTime == curTime) {
-				chords.at(chords.size() - 1).at(1) = i;
+		//		chords.at(chords.size() - 1).at(1) = i;
 			} else {
 				// finish previous chord
 				chords.at(chords.size() - 1).at(1) = i - 1;
