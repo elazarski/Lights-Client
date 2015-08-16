@@ -9,14 +9,25 @@
 #include <algorithm>
 #include "Obj.h"
 
+#include <typedefs.h>
+#include <visitor.h>
+#include <xml.h>
+#include <xmlfile.h>
+#include <xmlreader.h>
+#include <xml_tree_browser.h>
+#include <notevisitor.h>
+
 using namespace std;
+using namespace MusicXML2;
 
 // forward declarations
 bool sortFunction(Event a, Event b);
 vector<Event> sortArray(vector<Event> fullArray);
+/*
 int parsePitch(char *step, char *alter, char *octave);
 vector<Event> parseMeasure(xmlNodePtr cur);
 vector<Event> parsePart(xmlNodePtr cur, int track);
+*/
 int checkTracks(vector<vector<int> > inputTracks, vector<int> mp, vector<vector<int> > outputTracks, xmlChar *id);
 
 // called by main
@@ -130,7 +141,7 @@ vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTrac
 	// start reading XML file
 	printf("Starting to read gp.xml...\n");
 
-	// psuedo code
+	// old psuedo code
 
 	/* use Guitar Pro exported MusicXML files
 	 * we have the id's of the parts needed for everything
@@ -150,6 +161,23 @@ vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTrac
 	 */
 
 	path = songPath + "/gp.xml";
+
+	MusicXML2::xmlreader r;
+	SXMLFile file = r.read(path.c_str());
+
+	if (file) {
+		Sxmlelement elt = file->elements();
+
+		if (elt) {
+			notevisitor nv;
+			xml_tree_browser browser(&nv);
+			browser.browse(*elt);
+		}
+	} else {
+		fprintf(stderr, "Error reading gp.xml\n");
+	}
+
+	/*
 	xmlDocPtr doc;
 	xmlNodePtr cur;
 
@@ -201,6 +229,7 @@ vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTrac
 
 	xmlFree(cur);
 	xmlFree(doc);
+	*/
 
 	// sort fullArray based on time
 	vector<Event> finalArray = sortArray(fullArray);
@@ -254,6 +283,8 @@ int checkTracks(vector<vector<int> > inputTracks, vector<int> mp, vector<vector<
 	return -1;
 }
 
+/*
+
 // parse XML track, returns vector of parsed events
 vector<Event> parsePart(xmlNodePtr cur, int track) {
 
@@ -304,7 +335,7 @@ vector<Event> parsePart(xmlNodePtr cur, int track) {
 						 * 	  backward:		time = 1, num = number of repeats
 						 * rest:		type = META, time = duration, channel = 4
 						 * time sig		type = META, channel = 5, num = timeSig
-						 */
+
 
 						if (currentMeasure.at(i).channel == 3) { 			// divisions per quarter note
 							divisions = currentMeasure.at(i).num;
@@ -343,7 +374,7 @@ vector<Event> parsePart(xmlNodePtr cur, int track) {
 
 						/* chord:		type = CHORD, time = duration, num = noteNum, channel = 1
 						 * note:		type = NOTE, time = duration, num = noteNum, channel = 0
-						 */
+
 
 						if (currentMeasure.at(i).channel == 1) { 			// chord
 							part.push_back(currentMeasure.at(i));
@@ -638,7 +669,7 @@ int parsePitch(char *step, char *alter, char *octave) {
 	return ret;
 }
 
-
+*/
 // sorts fullArray based on time
 vector<Event> sortArray(vector<Event> fullArray) {
 
