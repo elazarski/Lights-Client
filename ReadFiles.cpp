@@ -169,11 +169,11 @@ vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTrac
 		Sxmlelement elt = file->elements();
 
 		if (elt) {
-			printf(elt->getName().c_str());
 			notevisitor nv;
 			MusicXML2::xml_tree_browser browser(&nv);
 			browser.browse(*elt);
 
+			nv.print(cout);
 		}
 	} else {
 		fprintf(stderr, "Error reading gp.xml\n");

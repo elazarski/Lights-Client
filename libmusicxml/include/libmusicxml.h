@@ -117,7 +117,7 @@ EXP xmlErr			musicxmlstring2guido(const char *buff, bool generateBars, std::ostr
 
 	The factory provides a high level API to build a MusicXML tree but gives also a low 
 	level access to the music representation. The idea is to make simple scores easy to build	
-	while complex scores accessible with a godd knowledge of the MusicXML format.
+	while complex scores accessible with a good knowledge of the MusicXML format.
 	The main feature of the factory is the automatic sort of the representation according to the dtd.
 	Actually, only a small subset of the containers is not handled due to forms like (A, B)*
 	where ordering should be specified at element construction. These containers are:
