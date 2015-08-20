@@ -26,7 +26,6 @@
 								<option id="gnu.cpp.compiler.option.include.paths.1102502353" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/include/alsa"/>
 									<listOptionValue builtIn="false" value="/usr/include/libxml2"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/libmusicxml/include}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.dialect.std.253854185" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.files.589348975" name="Include files (-include)" superClass="gnu.cpp.compiler.option.include.files"/>
@@ -38,7 +37,6 @@
 								<option id="gnu.c.compiler.option.include.paths.572021724" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/include/alsa"/>
 									<listOptionValue builtIn="false" value="/usr/include/libxml2"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/libmusicxml/include}&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.files.1946549363" name="Include files (-include)" superClass="gnu.c.compiler.option.include.files"/>
 								<option id="gnu.c.compiler.option.misc.other.1448841360" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-pthread -c -fmessage-length=0" valueType="string"/>
@@ -49,12 +47,10 @@
 							<tool command="g++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GLDErrorParser" id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.193019994" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
 								<option id="gnu.cpp.link.option.paths.1907904520" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="../"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/libmusicxml/libraries}&quot;"/>
 								</option>
 								<option id="gnu.cpp.link.option.libs.1710452645" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="asound"/>
 									<listOptionValue builtIn="false" value="xml2"/>
-									<listOptionValue builtIn="false" value="musicxml2"/>
 									<listOptionValue builtIn="false" value="pthread"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1625832202" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">

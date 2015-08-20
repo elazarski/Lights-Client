@@ -9,26 +9,15 @@
 #include <algorithm>
 #include "Obj.h"
 
-#include <typedefs.h>
-#include <visitor.h>
-#include <xml.h>
-#include <xmlfile.h>
-#include <xmlreader.h>
-#include <xml_tree_browser.h>
-#include <notevisitor.h>
-
 using namespace std;
-using namespace MusicXML2;
 
 // forward declarations
-bool sortFunction(Event a, Event b);
-vector<Event> sortArray(vector<Event> fullArray);
-/*
-int parsePitch(char *step, char *alter, char *octave);
-vector<Event> parseMeasure(xmlNodePtr cur);
-vector<Event> parsePart(xmlNodePtr cur, int track);
-*/
 int checkTracks(vector<vector<int> > inputTracks, vector<int> mp, vector<vector<int> > outputTracks, xmlChar *id);
+vector<Event> parsePart(xmlNodePtr parent, int track);
+vector<Event> parseMeasure(xmlNodePtr parent);
+
+vector<Event> sortVector(vector<Event> v);
+bool sortFunction(Event a, Event b);
 
 // called by main
 // reads all files and returns vector<Event> of all events to be handled, sorted by time.
@@ -36,7 +25,7 @@ vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTrac
 	string path;
 
 	// fullArray[0] reserved for status messages
-	vector<Event> fullArray(1);
+	vector<Event> fullVector;
 	vector<int> mp;
 	vector<vector<int> > inputTracks;
 	vector<vector<int> > outputTracks;
@@ -51,18 +40,20 @@ vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTrac
 	data = xmlParseFile(path.c_str());
 	if (data == NULL) {
 		fprintf(stderr, "data.xml not parsed successfully\n");
-		vector<Event> errorVect(1);
-		errorVect.at(1).num = -1;
-		return errorVect;
+		Event err;
+		err.num = -1;
+		fullVector.push_back(err);
+		return fullVector;
 	}
 
 	current = xmlDocGetRootElement(data);
 	if (current == NULL) {
 		fprintf(stderr, "Empty data.xml file\n");
 		xmlFree(data);
-		vector<Event> errorVect(1);
-		errorVect.at(1).num = -1;
-		return errorVect;
+		Event err;
+		err.num = -1;
+		fullVector.push_back(err);
+		return fullVector;
 	}
 
 	int currentInput = 0;
@@ -124,20 +115,6 @@ vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTrac
 	xmlFree(current);
 	xmlFree(data);
 
-	/*
-	for (unsigned int i = 0; i < inputTracks.size(); i++) {
-		for (unsigned int j = 0; j < inputTracks.at(i).size(); j++) {
-			printf("Input: %d\n", inputTracks.at(i).at(j));
-		}
-	}
-
-	for (unsigned int i = 0; i < outputTracks.size(); i++) {
-		for (unsigned int j = 0; j < outputTracks.at(i).size(); j++) {
-			printf("Output: %d\n", outputTracks.at(i).at(j));
-		}
-	}
-	 */
-
 	// start reading XML file
 	printf("Starting to read gp.xml...\n");
 
@@ -160,25 +137,57 @@ vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTrac
 	 * 		if <chord/> do not add ticks to next note
 	 */
 
+	// MusicXML exported by Guitar Pro from edited TuxGuitar file
 	path = songPath + "/gp.xml";
 
-	MusicXML2::xmlreader r;
-	SXMLFile file = r.read(path.c_str());
+	xmlDocPtr doc;
+	xmlNodePtr cur;
 
-	if (file) {
-		Sxmlelement elt = file->elements();
+	doc = xmlParseFile(path.c_str());
+	if (doc == NULL) {
+		fprintf(stderr, "gp.xml not parsed successfully\n");
 
-		if (elt) {
-			notevisitor nv;
-			MusicXML2::xml_tree_browser browser(&nv);
-			browser.browse(*elt);
-
-			nv.print(cout);
-		}
-	} else {
-		fprintf(stderr, "Error reading gp.xml\n");
+		Event e;
+		e.num = -2;
+		fullVector.push_back(e);
+		return fullVector;
 	}
 
+	cur = xmlDocGetRootElement(doc);
+	if (cur == NULL) {
+		fprintf(stderr, "Empty document\n");
+		xmlFreeDoc(doc);
+
+		Event e;
+		e.num = -2;
+		fullVector.push_back(e);
+		return fullVector;
+	}
+
+	// start parsing document, look for <part> node
+	cur = cur->children;
+	while (cur != NULL) {
+		if (strcmp((char *)cur->name, "part") == 0) {
+
+			// get if of current part
+			xmlChar *id = xmlGetProp(cur, (xmlChar *)"id");
+			int track = checkTracks(inputTracks, mp, outputTracks, id);
+
+			if (track < 0) {
+				if (track == -1) {
+
+					// get tempo from P1
+					fullVector.push_back(parsePart(cur, track).at(0));
+				}
+			} else {
+				// get part data
+
+			}
+
+		}
+
+		cur = cur->next;
+	}
 	/*
 	xmlDocPtr doc;
 	xmlNodePtr cur;
@@ -234,9 +243,9 @@ vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTrac
 	*/
 
 	// sort fullArray based on time
-	vector<Event> finalArray = sortArray(fullArray);
+	vector<Event> finalVector = sortVector(fullVector);
 
-	return finalArray;
+	return finalVector;
 }
 
 // checks if current track needs to be parsed, if it does returns that track number. if not, returns -1
@@ -281,8 +290,61 @@ int checkTracks(vector<vector<int> > inputTracks, vector<int> mp, vector<vector<
 		}
 	}
 
+	// part 1 for tempo
+	string partName = "P" +	static_cast<ostringstream*>( &(ostringstream() << 1))->str();
+	if (strcmp((char *)id, partName.c_str()) == 0) {
+		return -1;
+	}
+
 	// current track not needed
-	return -1;
+	return -2;
+}
+
+// parses MusicXML part and returns vector<Event> of retrieved data
+vector<Event> parsePart(xmlNodePtr parent, int track) {
+	vector<Event> partVector;
+	xmlNodePtr part = parent->children->next;
+	int divisions;
+	float lastTime = 0.0;
+	int forwardRepeatIndex = 0;
+	int timeSig;
+	float lastDur = 0.0;
+
+	if (track == -1) {
+		// just find <sound> in 1st measure to get tempo
+		xmlNodePtr measure1 = part->children;
+
+		while (measure1 != NULL) {
+			if (strcmp((char *)measure1->name, "sound") == 0) {
+				xmlChar *tempo = xmlGetProp(measure1, (xmlChar *)"tempo");
+
+				Event e;
+				e.type = META;
+				e.num = atoi((char *)tempo);
+				e.channel = -1;
+				e.time = 0;
+				partVector.push_back(e);
+
+				xmlFree(tempo);
+			}
+
+			measure1 = measure1->next;
+		}
+
+		xmlFree(measure1);
+	} else {
+		// get data from part measure by measure
+		while (part != NULL) {
+			if (strcmp((char *)part->name, "measure") == 0) {
+				// get measure data
+				vector<Event> measure = parseMeasure(part);
+			}
+		}
+	}
+
+	xmlFree(part);
+
+	return partVector;
 }
 
 /*
@@ -441,7 +503,91 @@ vector<Event> parsePart(xmlNodePtr cur, int track) {
 
 	return part;
 }
+*/
 
+vector<Event> parseMeasure(xmlNodePtr parent) {
+	xmlNodePtr measure = parent->children;
+	vector<Event> data;
+	int divisions;
+
+	// create an event for repeats
+	Event rep;
+	rep.type = META;
+	rep.time = -1;
+	rep.channel = -2;
+
+	// parse measure
+	while (measure != NULL) {
+		if (strcmp((char *)measure->name, "attributes") == 0) {
+
+			// divisions and time signature are here
+			xmlNodePtr attributes = measure->children;
+
+			while (attributes != NULL) {
+				if (strcmp((char *)attributes->name, "divisions") == 0) {
+
+					// get divisions
+					xmlChar *divs = attributes->children->content;
+					divisions = atoi((char *)divs);
+					xmlFree(divs);
+
+					// create event for divisions and append to events
+					// will be removed later
+					Event d;
+					d.type = META;
+					d.num = divisions;
+					d.channel = 3;
+					d.time = 0;
+
+					data.push_back(d);
+				} else if (strcmp((char *)attributes->name, "time") == 0) {
+					xmlNodePtr time = attributes->children;
+
+					while (time != NULL) {
+						if (strcmp((char *)time->name, "beat-type") == 0) {
+							Event bt;
+							bt.type = META;
+							bt.num = atoi((char *)time->children->content);
+							bt.channel = 5;
+							bt.time = 0;
+
+							data.push_back(bt);
+						}
+
+						time = time->next;
+					}
+					xmlFree(time);
+				}
+
+				attributes = attributes->next;
+			}
+			xmlFree(attributes);
+		} else if (strcmp((char *)measure->name, "barline") == 0) {
+
+			// forward and backwards repeats
+			xmlNodePtr barline = measure->children;
+
+			while (barline != NULL) {
+				if (strcmp((char *)barline->name, "repeat") == 0) {
+
+					// determine whether a forward or a backwards repeat
+					xmlChar *direction = xmlGetProp(barline, (xmlChar *)"direction");
+
+				}
+
+				barline = barline->next;
+			}
+			xmlFree(barline);
+		}
+
+		measure = measure->next;
+	}
+	xmlFree(measure);
+
+	return data;
+}
+
+/*
 // parse XML measure, returns vector of parsed events
 vector<Event> parseMeasure(xmlNodePtr cur) {
 	vector<Event> events;
@@ -673,9 +819,9 @@ int parsePitch(char *step, char *alter, char *octave) {
 
 */
 // sorts fullArray based on time
-vector<Event> sortArray(vector<Event> fullArray) {
+vector<Event> sortVector(vector<Event> v) {
 
-    vector<Event> sortedVector = fullArray;
+    vector<Event> sortedVector = v;
 
     sort(sortedVector.begin(), sortedVector.end(), sortFunction);
 
