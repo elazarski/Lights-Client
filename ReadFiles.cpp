@@ -14,8 +14,10 @@ using namespace std;
 // forward declarations
 int checkTracks(vector<vector<int> > inputTracks, vector<int> mp, vector<vector<int> > outputTracks, xmlChar *id);
 vector<Event> parsePart(xmlNodePtr parent, int track);
+Event parsePartOne(xmlNodePtr parent);
 vector<Event> parseMeasure(xmlNodePtr parent);
-
+Event parseNote(xmlNodePtr parent);
+int parsePitch(xmlNodePtr parent);
 vector<Event> sortVector(vector<Event> v);
 bool sortFunction(Event a, Event b);
 
@@ -177,7 +179,7 @@ vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTrac
 				if (track == -1) {
 
 					// get tempo from P1
-					fullVector.push_back(parsePart(cur, track).at(0));
+					fullVector.push_back(parsePartOne(cur));
 				}
 			} else {
 				// get part data
@@ -310,41 +312,46 @@ vector<Event> parsePart(xmlNodePtr parent, int track) {
 	int timeSig;
 	float lastDur = 0.0;
 
-	if (track == -1) {
-		// just find <sound> in 1st measure to get tempo
-		xmlNodePtr measure1 = part->children;
-
-		while (measure1 != NULL) {
-			if (strcmp((char *)measure1->name, "sound") == 0) {
-				xmlChar *tempo = xmlGetProp(measure1, (xmlChar *)"tempo");
-
-				Event e;
-				e.type = META;
-				e.num = atoi((char *)tempo);
-				e.channel = -1;
-				e.time = 0;
-				partVector.push_back(e);
-
-				xmlFree(tempo);
-			}
-
-			measure1 = measure1->next;
-		}
-
-		xmlFree(measure1);
-	} else {
-		// get data from part measure by measure
-		while (part != NULL) {
-			if (strcmp((char *)part->name, "measure") == 0) {
-				// get measure data
-				vector<Event> measure = parseMeasure(part);
-			}
+	// get data from part measure by measure
+	while (part != NULL) {
+		if (strcmp((char *)part->name, "measure") == 0) {
+			// get measure data
+			vector<Event> measure = parseMeasure(part);
 		}
 	}
 
 	xmlFree(part);
 
 	return partVector;
+}
+
+Event parsePartOne(xmlNodePtr parent) {
+
+	// go straight to parsing measure data
+	xmlNodePtr measure = parent->children->next->children;
+
+	while (measure != NULL) {
+		if (strcmp((char *)measure->name, "sound") == 0) {
+			xmlChar *tempo = xmlGetProp(measure, (xmlChar *)"tempo");
+
+			Event e;
+			e.type = META;
+			e.num = atoi((char *)tempo);
+			e.channel = -1;
+			e.time = 0;
+
+			xmlFree(measure);
+			return e;
+		}
+
+		measure = measure->next;
+	}
+
+
+	xmlFree(measure);
+
+	fprintf(stderr, "NO TEMPO FOUND\n");
+	exit(1);
 }
 
 /*
@@ -505,6 +512,9 @@ vector<Event> parsePart(xmlNodePtr cur, int track) {
 }
 */
 
+
+// parse <measure>
+// returns dirty vector of parsed events
 vector<Event> parseMeasure(xmlNodePtr parent) {
 	xmlNodePtr measure = parent->children;
 	vector<Event> data;
@@ -573,11 +583,26 @@ vector<Event> parseMeasure(xmlNodePtr parent) {
 					// determine whether a forward or a backwards repeat
 					xmlChar *direction = xmlGetProp(barline, (xmlChar *)"direction");
 
+					if (strcmp((char *)direction, "forward") == 0) {
+						rep.time = -1;
+						data.push_back(rep);
+					} else {
+
+						xmlChar *times = xmlGetProp(barline, (xmlChar *)"times");
+						rep.time = 1;
+						rep.num = atoi((char *)times);
+
+						xmlFree(times);
+					}
+
+					xmlFree(direction);
 				}
 
 				barline = barline->next;
 			}
 			xmlFree(barline);
+		} else if (strcmp((char *)measure->name, "note") == 0) {
+
 		}
 
 		measure = measure->next;
@@ -587,6 +612,39 @@ vector<Event> parseMeasure(xmlNodePtr parent) {
 	return data;
 }
 
+Event parseNote(xmlNodePtr parent) {
+	xmlNodePtr note = parent->children;
+
+	Event e;
+	e.channel = 0;
+	bool tie = false;
+
+	while (note != NULL) {
+		if (strcmp((char *)note->name, "pitch") == 0) {
+
+		}
+		note = note->next;
+	}
+
+	xmlFree(note);
+	return e;
+}
+
+int parsePitch(xmlNodePtr parent) {
+	xmlNodePtr pitch = parent->children;
+
+	int num = 0;
+	xmlChar *alter = NULL;
+	xmlChar *step = NULL;
+	xmlChar *octave = NULL;
+
+	while (pitch != NULL) {
+		char *name = (char *)pitch->name;
+	}
+
+	xmlFree(pitch);
+	return num;
+}
 /*
 // parse XML measure, returns vector of parsed events
 vector<Event> parseMeasure(xmlNodePtr cur) {
