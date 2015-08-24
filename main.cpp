@@ -54,11 +54,11 @@ int main(int argc, char *argv[]) {
 			vector<Event> fullArray = readFiles(songPath, &numInputTracks, &numOutputTracks);
 
 			// check for errors
-			if (fullArray.at(0).num == -1) {
+			if (fullArray.at(0).note == -1) {
 				printf("There was an error reading the data file\n");
-			} else if (fullArray.at(0).num == -2) {
+			} else if (fullArray.at(0).note == -2) {
 				printf("Failed to parse XML file\n");
-			} else if (fullArray.at(0).num == -3) {
+			} else if (fullArray.at(0).note == -3) {
 				printf("Unable to open XML file\n");
 			} else {
 				printf("Song loaded\n");

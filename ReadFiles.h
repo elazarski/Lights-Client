@@ -8,6 +8,6 @@
 
 using namespace std;
 
-vector<Event> readFiles(string songPath, int *numInputTracks, int *numOutputTracks);
+Song readFiles(string songPath, int *numInputTracks, int *numOutputTracks);
 
 #endif // READFILES_H_INCLUDED
