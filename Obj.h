@@ -14,18 +14,9 @@ typedef struct Event {
 } EVENT;
 #endif
 
-#ifndef TIMESIGNATURE_H
-#define TIMESIGNATURE_H
-typedef struct TimeSignature {
-	int numerator;
-	int denominator;
-} TIMESIGNATURE;
-#endif
-
 #ifndef MEASURE_H
 #define MEASURE_H
 typedef struct Measure {
-	TimeSignature time;
 	vector<Event> voiceOne;
 	vector<Event> voiceTwo;
 } MEASURE;
@@ -39,12 +30,20 @@ typedef struct Track {
 } TRACK;
 #endif
 
+#ifndef MP_H
+#define MP_H
+typedef struct MP {
+	vector<int> measures;
+	vector<int> parts;
+} MP;
+#endif
+
 #ifndef SONG_H
 #define SONG_H
 typedef struct Song {
 	int tempo;
 	vector<Track> tracks;
-	Track mp;
+	MP mp;
 } SONG;
 #endif
 

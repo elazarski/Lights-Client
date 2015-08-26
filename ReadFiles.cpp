@@ -19,9 +19,12 @@ using namespace std;
 
 int checkTracks(vector<int> inputTracks, vector<int> outputTracks, int mp, char * id);
 int parseSongTempo(xmlNodePtr parent);
+MP parseMP(xmlNodePtr parent);
+
+Measure parseMeasure(xmlNodePtr parent);
 
 Song readFiles (string songPath, int *numInputTracks, int *numOutputTracks) {
-	Song data;
+	Song song;
 
 	string path;
 	vector<int> inputTracks;
@@ -96,7 +99,6 @@ Song readFiles (string songPath, int *numInputTracks, int *numOutputTracks) {
 	}
 
 	// start parsing doc
-	int songTempo;
 	cur = cur->children;
 	while (cur != NULL) {
 		char *name = (char *)cur->name;
@@ -112,7 +114,21 @@ Song readFiles (string songPath, int *numInputTracks, int *numOutputTracks) {
 			if (track < 0) {
 				if (track == -1) {
 
+					// get tempo from P1
+					int tempo = parseSongTempo(cur);
+					if (tempo > 0) {
+						song.tempo = tempo;
+					} else {
+						fprintf(stderr, "Error parsing tempo\n");
+						exit(1);
+					}
+				} else if (track == -2) {
+
+					// get measure/parts track
+
 				}
+			} else {
+
 			}
 		}
 
@@ -123,12 +139,12 @@ Song readFiles (string songPath, int *numInputTracks, int *numOutputTracks) {
 	xmlFree(cur);
 	xmlFree(doc);
 
-	return data;
+	return song;
 }
 
 // checks if track is needed
 int checkTracks(vector<int> inputTracks, vector<int> outputTracks, int mp, char *id) {
-	int ret = -2;
+	int ret = -3;
 
 	// check input tracks
 	for (unsigned int i = 0; i < inputTracks.size(); i++) {
@@ -160,7 +176,7 @@ int checkTracks(vector<int> inputTracks, vector<int> outputTracks, int mp, char 
 			<< mp))->str();
 
 	if (strcmp(id, partName.c_str()) == 0) {
-		ret = 32;
+		ret = -2;
 		return ret;
 	}
 
@@ -178,8 +194,85 @@ int checkTracks(vector<int> inputTracks, vector<int> outputTracks, int mp, char 
 	return ret;
 }
 
+// get tempo from P1
 int parseSongTempo(xmlNodePtr parent) {
-	int tempo;
+	int tempo = 0;
 
+	xmlNodePtr measure = parent->children->next->children;
+
+	while (measure != NULL) {
+		char *name = (char *)measure->name;
+
+		if (strcmp(name, "sound") == 0) {
+			char *tempoNode = (char *)xmlGetProp(measure, (xmlChar *)"tempo");
+
+			tempo = atoi(tempoNode);
+			free(tempoNode);
+		}
+
+		free(name);
+		measure = measure->next;
+	}
+
+	xmlFree(measure);
 	return tempo;
+}
+
+// using a separate function for MP because it has to be parsed slightly differently
+MP parseMP(xmlNodePtr parent) {
+	MP mp;
+
+	xmlNodePtr part = parent->children->next;
+	int forwardRepeatIndex = 0;
+	int currentMeasure = 0;
+
+	while (part != NULL) {
+		char *name = (char *)part->name;
+
+		if (strcmp(name, "measure") == 0) {
+			Measure measure = parseMeasure(part);
+
+			currentMeasure++;
+		}
+
+		free(name);
+		part = part->next;
+	}
+
+	xmlFree(part);
+	return mp;
+}
+
+
+// returns Measure of parsed Events
+Measure parseMeasure(xmlNodePtr parent) {
+	Measure measure;
+
+	xmlNodePtr event = parent->children;
+
+	while (event != NULL) {
+		char *name = (char *)event->name;
+
+		if (strcmp(name, "attributes") == 0) {
+
+			// divisions are here
+			xmlNodePtr attr = event->children;
+
+			while (attr != NULL) {
+				char *name = (char *)attr->name;
+
+
+				free(name);
+				attr = attr->next;
+			}
+
+			xmlFree(attr);
+		}
+
+		free(name);
+		event = event->next;
+	}
+
+	xmlFree(event);
+	return measure;
 }
